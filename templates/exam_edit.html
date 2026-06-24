@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}ویرایش آزمون — {{ exam.title }}{% endblock %}
+
+{% block content %}
+<div class="topbar fade-in">
+  <div>
+    <div class="page-title">✏️ ویرایش آزمون</div>
+    <div class="page-subtitle">{{ exam.title }}</div>
+  </div>
+  <a href="/exams/{{ exam.id }}/questions" class="btn btn-secondary">← برگشت به سوالات</a>
+</div>
+
+<div style="max-width:640px; margin:0 auto;">
+  {% if error %}
+  <div class="alert alert-error fade-in" style="margin-bottom:20px;">⚠️ {{ error }}</div>
+  {% endif %}
+
+  <div class="card fade-in fade-in-1">
+    <div class="card-header">
+      <div class="card-title">اطلاعات آزمون</div>
+    </div>
+    <form method="post" action="/exams/{{ exam.id }}/edit">
+      <div class="form-group">
+        <label class="form-label">عنوان آزمون *</label>
+        <input type="text" name="title" class="form-control" value="{{ exam.title }}" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">توضیحات</label>
+        <textarea name="description" class="form-control" rows="3">{{ exam.description or '' }}</textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">زمان شروع *</label>
+          <input type="datetime-local" name="start_time" class="form-control"
+                 value="{{ exam.start_time.strftime('%Y-%m-%dT%H:%M') }}" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">زمان پایان *</label>
+          <input type="datetime-local" name="end_time" class="form-control"
+                 value="{{ exam.end_time.strftime('%Y-%m-%dT%H:%M') }}" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">مدت زمان آزمون (دقیقه) *</label>
+        <input type="number" name="duration_minutes" class="form-control"
+               value="{{ exam.duration_minutes }}" min="5" max="300" required>
+      </div>
+      <div style="display:flex; gap:12px;">
+        <button type="submit" class="btn btn-primary" style="flex:1;">💾 ذخیره تغییرات</button>
+        <a href="/exams/{{ exam.id }}/questions" class="btn btn-secondary">لغو</a>
+      </div>
+    </form>
+  </div>
+
+  <!-- Danger Zone -->
+  <div class="card fade-in fade-in-2" style="margin-top:20px; border-color:rgba(255,95,109,.3);">
+    <div class="card-header">
+      <div class="card-title" style="color:#ff5f6d;">⚠️ ناحیه خطر</div>
+    </div>
+    <p style="font-size:.85rem; color:var(--text-secondary); margin-bottom:16px;">
+      حذف آزمون غیر قابل بازگشت است. تمام سوالات و نتایج دانشجویان نیز حذف خواهند شد.
+    </p>
+    <form method="post" action="/exams/{{ exam.id }}/delete"
+          onsubmit="return confirm('آیا از حذف آزمون «{{ exam.title }}» مطمئن هستید؟ این عمل برگشت‌ناپذیر است.')">
+      <button type="submit" class="btn" style="background:rgba(255,95,109,.15); color:#ff5f6d; border:1px solid rgba(255,95,109,.4);">
+        🗑️ حذف این آزمون
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}

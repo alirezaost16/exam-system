@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% block title %}داشبورد مدیر{% endblock %}
+
+{% block content %}
+<div class="topbar fade-in">
+  <div>
+    <div class="page-title">پنل مدیریت 🔐</div>
+    <div class="page-subtitle">کنترل کامل سامانه — {{ user.full_name }}</div>
+  </div>
+</div>
+
+<div class="stats-grid fade-in fade-in-1">
+  <div class="stat-card cyan">
+    <div class="stat-icon">👥</div>
+    <div class="stat-value">{{ all_users|length }}</div>
+    <div class="stat-label">کل کاربران</div>
+  </div>
+  <div class="stat-card green">
+    <div class="stat-icon">📋</div>
+    <div class="stat-value">{{ all_exams|length }}</div>
+    <div class="stat-label">کل آزمون‌ها</div>
+  </div>
+  <div class="stat-card amber">
+    <div class="stat-icon">🎓</div>
+    <div class="stat-value">{{ all_users|selectattr('role','eq','teacher')|list|length }}</div>
+    <div class="stat-label">استادان</div>
+  </div>
+  <div class="stat-card violet">
+    <div class="stat-icon">👤</div>
+    <div class="stat-value">{{ all_users|selectattr('role','eq','student')|list|length }}</div>
+    <div class="stat-label">دانشجویان</div>
+  </div>
+</div>
+
+<div class="content-grid fade-in fade-in-2">
+  <!-- Users Table -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">👥 مدیریت کاربران</div>
+      <a href="/register" class="btn btn-primary btn-sm">＋ کاربر جدید</a>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>نام</th>
+            <th>نقش</th>
+            <th>وضعیت</th>
+            <th>ایمیل</th>
+            <th>عملیات</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for u in all_users %}
+          <tr>
+            <td>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <div class="user-avatar" style="width:28px;height:28px;font-size:12px;">{{ u.full_name[0] }}</div>
+                <span style="font-weight:500;">{{ u.full_name }}</span>
+              </div>
+            </td>
+            <td>
+              <span class="badge role-{{ u.role }}">
+                {% if u.role=='admin' %}مدیر{% elif u.role=='teacher' %}استاد{% else %}دانشجو{% endif %}
+              </span>
+            </td>
+            <td>
+              {% if u.role == 'teacher' and not u.is_verified %}
+              <span class="badge badge-amber">⏳ در انتظار تایید</span>
+              {% else %}
+              <span class="badge badge-green">✅ فعال</span>
+              {% endif %}
+            </td>
+            <td style="color:var(--text-muted);font-size:.8rem;">{{ u.email }}</td>
+            <td>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                <a href="/admin/users/{{ u.id }}/edit" class="btn btn-ghost btn-sm" title="ویرایش اطلاعات کاربر">✏️</a>
+                {% if u.role == 'teacher' and not u.is_verified %}
+                <form method="post" action="/admin/users/{{ u.id }}/verify" style="display:inline;">
+                  <button class="btn btn-success btn-sm" title="تایید حساب استاد">✅ تایید</button>
+                </form>
+                {% endif %}
+                {% if u.id != user.id %}
+                <form method="post" action="/admin/users/{{ u.id }}/role" style="display:inline;">
+                  <select name="role" onchange="this.form.submit()" class="form-control" style="padding:4px 8px;font-size:.75rem;width:auto;">
+                    <option value="student" {% if u.role=='student' %}selected{% endif %}>دانشجو</option>
+                    <option value="teacher" {% if u.role=='teacher' %}selected{% endif %}>استاد</option>
+                    <option value="admin"   {% if u.role=='admin'   %}selected{% endif %}>مدیر</option>
+                  </select>
+                </form>
+                <form method="post" action="/admin/users/{{ u.id }}/delete" onsubmit="return confirm('حذف شود؟')">
+                  <button class="btn btn-danger btn-sm">🗑</button>
+                </form>
+                {% else %}
+                <span style="font-size:.75rem;color:var(--text-muted);">شما</span>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Exams -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">📋 همه آزمون‌ها</div>
+      <a href="/exams/create" class="btn btn-secondary btn-sm">＋ جدید</a>
+    </div>
+    {% if all_exams %}
+    {% for exam in all_exams %}
+    <div style="padding:12px 0; border-bottom:1px solid var(--border);">
+      <div style="font-weight:600;font-size:.88rem;margin-bottom:4px;">{{ exam.title }}</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <span class="badge {% if exam.is_active %}badge-green{% else %}badge-gray{% endif %}">
+          {% if exam.is_active %}فعال{% else %}غیرفعال{% endif %}
+        </span>
+        <span style="font-size:.75rem;color:var(--text-muted);">{{ exam.results|length }} شرکت‌کننده</span>
+        <a href="/exams/{{ exam.id }}/questions" class="btn btn-ghost btn-sm">مدیریت</a>
+      </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">📭</div>
+      <div class="empty-title">آزمونی وجود ندارد</div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

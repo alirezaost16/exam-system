@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% block title %}کارنامه من{% endblock %}
+
+{% block content %}
+<div class="topbar fade-in">
+  <div>
+    <div class="page-title">کارنامه تحصیلی 📊</div>
+    <div class="page-subtitle">{{ user.full_name }} — خلاصه عملکرد</div>
+  </div>
+</div>
+
+{% if results %}
+{% set submitted = results|selectattr('submitted_at')|list %}
+{% set avg = submitted|map(attribute='score')|sum / submitted|length if submitted else 0 %}
+
+<!-- Stats -->
+<div class="stats-grid fade-in fade-in-1">
+  <div class="stat-card cyan">
+    <div class="stat-icon">📋</div>
+    <div class="stat-value">{{ results|length }}</div>
+    <div class="stat-label">کل آزمون‌های شرکت‌شده</div>
+  </div>
+  <div class="stat-card green">
+    <div class="stat-icon">⭐</div>
+    <div class="stat-value">{{ "%.1f"|format(avg) }}</div>
+    <div class="stat-label">میانگین نمره</div>
+  </div>
+  <div class="stat-card amber">
+    <div class="stat-icon">🏆</div>
+    <div class="stat-value">
+      {% if submitted %}{{ "%.1f"|format(submitted|map(attribute='score')|max) }}{% else %}—{% endif %}
+    </div>
+    <div class="stat-label">بهترین نمره</div>
+  </div>
+  <div class="stat-card violet">
+    <div class="stat-icon">✅</div>
+    <div class="stat-value">
+      {{ submitted|length }}
+    </div>
+    <div class="stat-label">آزمون تکمیل‌شده</div>
+  </div>
+</div>
+
+<!-- Chart placeholder -->
+<div class="card fade-in fade-in-2" style="margin-bottom:20px;">
+  <div class="card-header">
+    <div class="card-title">📈 روند نمرات</div>
+  </div>
+  <div id="score-chart" style="height:160px; display:flex; align-items:flex-end; gap:8px; padding:8px 0;">
+    {% for r in submitted %}
+    {% set pct = (r.score / 20 * 100)|int if r.score <= 20 else 100 %}
+    <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:6px;">
+      <div style="font-size:.68rem; color:
+        {% if r.score >= 15 %}var(--success)
+        {% elif r.score >= 10 %}var(--warning)
+        {% else %}var(--danger){% endif %};">
+        {{ "%.1f"|format(r.score) }}
+      </div>
+      <div style="width:100%; border-radius:4px 4px 0 0; transition:height .5s ease;
+        background: {% if r.score >= 15 %}var(--success){% elif r.score >= 10 %}var(--warning){% else %}var(--danger){% endif %};
+        height:{{ pct }}%; min-height:4px; opacity:.8;">
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  <div style="font-size:.72rem; color:var(--text-muted); text-align:center; margin-top:6px;">نمودار نمرات (از چپ: قدیمی‌ترین)</div>
+</div>
+
+<!-- Table -->
+<div class="card fade-in fade-in-3">
+  <div class="card-header">
+    <div class="card-title">📋 تاریخچه کامل آزمون‌ها</div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>عنوان آزمون</th>
+          <th>نمره</th>
+          <th>درصد</th>
+          <th>وضعیت</th>
+          <th>تاریخ ارسال</th>
+          <th>جزئیات</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in results %}
+        {% set exam = r.exam %}
+        {% set total_pts = exam.questions|map(attribute='points')|sum if exam and exam.questions else 20 %}
+        {% set pct = (r.score / total_pts * 100)|int if total_pts > 0 else 0 %}
+        <tr>
+          <td style="color:var(--text-muted); font-size:.8rem;">{{ loop.index }}</td>
+          <td style="font-weight:600;">{{ exam.title if exam else '—' }}</td>
+          <td>
+            <span class="badge
+              {% if r.score >= 15 %}badge-green
+              {% elif r.score >= 10 %}badge-amber
+              {% else %}badge-red{% endif %}">
+              {{ "%.1f"|format(r.score) }}
+            </span>
+          </td>
+          <td>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <div class="progress-bar" style="width:80px; height:4px;">
+                <div class="progress-fill" style="width:{{ pct }}%;
+                  background:{% if pct>=75 %}var(--success){% elif pct>=50 %}var(--warning){% else %}var(--danger){% endif %};">
+                </div>
+              </div>
+              <span style="font-size:.8rem; color:var(--text-muted);">{{ pct }}٪</span>
+            </div>
+          </td>
+          <td>
+            {% if r.submitted_at %}
+              <span class="badge {% if pct >= 50 %}badge-green{% else %}badge-red{% endif %}">
+                {% if pct >= 50 %}قبول{% else %}مردود{% endif %}
+              </span>
+            {% else %}
+              <span class="badge badge-amber">ناتمام</span>
+            {% endif %}
+          </td>
+          <td style="color:var(--text-muted); font-size:.8rem;">
+            {{ r.submitted_at.strftime('%Y/%m/%d — %H:%M') if r.submitted_at else '—' }}
+          </td>
+          <td>
+            {% if r.submitted_at %}
+            <a href="/results/{{ r.id }}" class="btn btn-ghost btn-sm">مشاهده</a>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% else %}
+<div class="card fade-in">
+  <div class="empty-state">
+    <div class="empty-icon">📭</div>
+    <div class="empty-title">هنوز در هیچ آزمونی شرکت نکرده‌اید</div>
+    <div class="empty-desc">با شرکت در آزمون‌ها، نتایج شما اینجا نمایش داده می‌شود</div>
+    <a href="/dashboard" class="btn btn-primary" style="margin-top:16px;">رفتن به داشبورد</a>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

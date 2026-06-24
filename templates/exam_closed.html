@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}آزمون بسته است{% endblock %}
+
+{% block content %}
+<div style="max-width:500px; margin:80px auto; text-align:center;">
+  <div class="card card-accent fade-in" style="padding:48px 32px;">
+    <div style="font-size:56px; margin-bottom:20px;">🔒</div>
+    <h2 style="margin-bottom:10px;">آزمون در دسترس نیست</h2>
+    <p style="color:var(--text-muted); margin-bottom:28px; line-height:1.7;">
+      آزمون <strong style="color:var(--text-primary);">{{ exam.title }}</strong>
+      در حال حاضر فعال نیست.
+    </p>
+    <div style="background:var(--bg-elevated); border:1px solid var(--border); border-radius:var(--radius-md); padding:16px; margin-bottom:24px; font-size:.85rem;">
+      <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+        <span style="color:var(--text-muted);">شروع آزمون:</span>
+        <span style="color:var(--text-primary);">{{ exam.start_time.strftime('%Y/%m/%d — %H:%M') }}</span>
+      </div>
+      <div style="display:flex; justify-content:space-between;">
+        <span style="color:var(--text-muted);">پایان آزمون:</span>
+        <span style="color:var(--text-primary);">{{ exam.end_time.strftime('%Y/%m/%d — %H:%M') }}</span>
+      </div>
+    </div>
+    <a href="/dashboard" class="btn btn-primary btn-full">← بازگشت به داشبورد</a>
+  </div>
+</div>
+{% endblock %}

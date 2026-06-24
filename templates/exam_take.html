@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ exam.title }} — آزمون</title>
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/main.css">
+  <link rel="stylesheet" href="/static/css/ultra.css">
+  <style>
+    body { background: var(--bg-base); }
+
+    /* ── Header ── */
+    .exam-header {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(10,10,15,.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 24px;
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    }
+
+    .exam-body { max-width: 720px; margin: 0 auto; padding: 32px 20px 120px; }
+
+    /* ── سوالات یکی‌یکی (slide) ── */
+    .q-slide { display: none; }
+    .q-slide.active {
+      display: block;
+      animation: fadeUp .3s cubic-bezier(.4,0,.2,1);
+    }
+    @keyframes fadeUp {
+      from { opacity:0; transform:translateY(16px); }
+      to   { opacity:1; transform:translateY(0);    }
+    }
+
+    /* ── گزینه‌ها ── */
+    .option-wrap { position: relative; }
+    .option-wrap input[type=radio] { position:absolute; opacity:0; width:0; height:0; }
+    .option-wrap input[type=radio]:checked ~ label {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+      color: var(--accent);
+    }
+    .option-wrap input[type=radio]:disabled ~ label { cursor:default; opacity:.75; }
+    .option-wrap input[type=radio]:disabled:checked ~ label {
+      border-color: var(--success) !important;
+      background: rgba(0,229,160,.12) !important;
+      color: var(--success) !important;
+      opacity: 1;
+    }
+
+    /* ── تایمر سوال ── */
+    .q-timer-bar {
+      height: 5px; background: var(--bg-overlay);
+      border-radius: 3px; margin-top: 16px; overflow: hidden;
+    }
+    .q-timer-fill {
+      height: 100%; background: var(--accent);
+      border-radius: 3px; width: 100%;
+      transition: width .8s linear, background .3s;
+    }
+    .q-timer-label {
+      font-size: .75rem; color: var(--text-muted);
+      margin-top: 5px; display:flex; align-items:center; gap:6px;
+    }
+    .q-timer-label.warn { color: #ffb347; }
+    .q-timer-label.crit { color: #ff5f6d; }
+
+    /* ── حالت قفل ── */
+    .question-card.card-locked-ok  { border-color: rgba(0,229,160,.4) !important; }
+    .question-card.card-locked-exp { border-color: rgba(255,95,109,.3) !important; opacity:.6; }
+    .question-card textarea:disabled { opacity:.7; resize:none; cursor:default; }
+
+    /* ── نوار پایین ── */
+    .nav-bar {
+      position: fixed; bottom:0; right:0; left:0; z-index:100;
+      background: rgba(10,10,15,.97);
+      backdrop-filter: blur(12px);
+      border-top: 1px solid var(--border);
+      padding: 13px 24px;
+      display: flex; align-items:center; justify-content:center; gap:12px;
+    }
+
+    /* ── دکمه تایید پاسخ ── */
+    .confirm-bar {
+      margin-top: 18px;
+      padding: 14px 18px;
+      background: var(--bg-overlay);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      flex-wrap: wrap;
+    }
+    .confirm-bar.hidden { display: none; }
+    .btn-confirm {
+      padding: 9px 22px; border-radius: 10px;
+      background: var(--success); color: #000;
+      font-weight: 700; font-size: .88rem; font-family: Vazirmatn,sans-serif;
+      border: none; cursor: pointer;
+      transition: opacity .15s, transform .1s;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .btn-confirm:hover { opacity:.85; }
+    .btn-confirm:active { transform:scale(.97); }
+    .btn-edit {
+      padding: 7px 16px; border-radius: 8px;
+      background: transparent; color: var(--text-secondary);
+      font-weight: 600; font-size: .82rem; font-family: Vazirmatn,sans-serif;
+      border: 1.5px solid var(--border); cursor: pointer;
+      transition: all .15s;
+    }
+    .btn-edit:hover { border-color: var(--accent); color: var(--accent); }
+    .confirm-hint {
+      font-size: .8rem; color: var(--text-muted); flex: 1;
+      min-width: 120px;
+    }
+    .confirm-hint.has-answer { color: var(--text-secondary); }
+
+    /* ── آپلود فایل تشریحی ── */
+    .file-upload-area {
+      margin-top: 14px;
+      border: 2px dashed var(--border);
+      border-radius: 12px;
+      padding: 18px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color .2s, background .2s;
+      background: var(--bg-overlay);
+    }
+    .file-upload-area:hover, .file-upload-area.dragover {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+    }
+    .file-upload-area input[type=file] { display: none; }
+    .file-upload-icon { font-size: 1.8rem; margin-bottom: 6px; }
+    .file-upload-text { font-size: .82rem; color: var(--text-muted); }
+    .file-upload-text strong { color: var(--accent); }
+    .file-list {
+      margin-top: 10px;
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .file-item {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: .82rem;
+    }
+    .file-item-icon { font-size: 1.1rem; flex-shrink: 0; }
+    .file-item-name { flex: 1; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .file-item-size { color: var(--text-muted); font-size: .75rem; flex-shrink: 0; }
+    .file-item-remove {
+      background: none; border: none; cursor: pointer;
+      color: var(--text-muted); font-size: .85rem; padding: 2px 6px;
+      border-radius: 4px; transition: color .15s, background .15s;
+      flex-shrink: 0;
+    }
+    .file-item-remove:hover { color: #ff5f6d; background: rgba(255,95,109,.1); }
+
+    .btn-submit-final {
+      padding: 9px 26px; border-radius:10px;
+      background: var(--success); color:#000;
+      font-weight:700; font-size:.9rem; font-family:Vazirmatn,sans-serif;
+      border:none; cursor:pointer;
+      transition: opacity .15s;
+    }
+    .btn-submit-final:hover { opacity:.85; }
+
+    /* ── نقطه‌های پیشرفت ── */
+    .q-dots { display:flex; gap:7px; flex-wrap:wrap; }
+    .q-dot {
+      width:11px; height:11px; border-radius:50%;
+      background: var(--bg-overlay); border:1.5px solid var(--border);
+      transition: all .25s;
+    }
+    .q-dot.dot-active  { border-color:var(--accent); background:var(--accent-dim); }
+    .q-dot.dot-done    { background:var(--success);  border-color:var(--success); }
+    .q-dot.dot-expired { background:#ff5f6d;         border-color:#ff5f6d; }
+
+    /* ── صفحه پایان ── */
+    .done-screen {
+      display:none; text-align:center; padding:60px 24px;
+    }
+    .done-screen.active { display:block; animation:fadeUp .3s ease; }
+  </style>
+</head>
+<body>
+
+<!-- تایمر کلی آزمون -->
+<div class="exam-timer-widget">
+  <div>
+    <div class="timer-label">زمان کل باقی‌مانده</div>
+    <div class="timer-value" id="timer-value">--:--</div>
+  </div>
+</div>
+
+<!-- هدر -->
+<div class="exam-header">
+  <div>
+    <div style="font-weight:700;font-size:.95rem;">{{ exam.title }}</div>
+    <div style="font-size:.72rem;color:var(--text-muted);">{{ exam.duration_minutes }} دقیقه</div>
+  </div>
+
+  <!-- شماره سوال فعلی -->
+  <div style="font-size:.85rem;color:var(--text-muted);white-space:nowrap;">
+    سوال <span id="hdr-cur" style="color:var(--accent);font-weight:700;">1</span>
+    از <strong>{{ questions|length }}</strong>
+  </div>
+
+  <!-- نقطه‌های پیشرفت -->
+  <div class="q-dots" id="q-dots">
+    {% for q in questions %}
+    <div class="q-dot {% if loop.first %}dot-active{% endif %}" id="dot-{{ loop.index0 }}"></div>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="exam-body">
+
+  <!-- فرم مخفی برای submit نهایی -->
+  <form method="post" action="/exams/{{ exam.id }}/submit"
+        id="exam-form" data-exam-id="{{ exam.id }}" enctype="multipart/form-data"></form>
+
+  <!-- سوالات -->
+  {% for q in questions %}
+  <div class="q-slide {% if loop.first %}active{% endif %}"
+       id="slide-{{ loop.index0 }}"
+       data-idx="{{ loop.index0 }}"
+       data-qid="{{ q.id }}"
+       data-timelimit="{{ q.time_limit if q.time_limit else 0 }}"
+       data-qtype="{{ q.question_type }}">
+
+    <div class="question-card" id="card-{{ q.id }}">
+      <div class="question-header">
+        <div class="question-number">{{ loop.index }}</div>
+        <div style="flex:1;">
+          <div class="question-text">{{ q.question_text }}</div>
+          <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+            <span class="badge {% if q.question_type=='multiple_choice' %}badge-cyan{% else %}badge-violet{% endif %}">
+              {% if q.question_type=='multiple_choice' %}تستی{% else %}تشریحی{% endif %}
+            </span>
+            <span class="badge badge-amber">{{ q.points }} نمره</span>
+            {% if q.time_limit and q.time_limit > 0 %}
+            <span class="badge badge-violet" id="q-badge-{{ q.id }}">⏱ {{ q.time_limit }} ثانیه</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      {% if q.question_type == 'multiple_choice' and q.options_parsed %}
+      <div class="options-grid">
+        {% for key, val in q.options_parsed.items() %}
+        <div class="option-wrap">
+          <input type="radio" name="q_{{ q.id }}_live" id="q{{ q.id }}_{{ key }}" value="{{ key }}">
+          <label class="option-label" for="q{{ q.id }}_{{ key }}">
+            <span style="display:inline-flex;align-items:center;justify-content:center;
+                         width:22px;height:22px;background:var(--bg-overlay);
+                         border-radius:50%;font-size:.72rem;font-weight:700;flex-shrink:0;">
+              {{ key.upper() }}
+            </span>
+            {{ val }}
+          </label>
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- نوار تایید پاسخ تستی -->
+      <div class="confirm-bar hidden" id="confirm-bar-{{ q.id }}">
+        <div class="confirm-hint has-answer" id="confirm-hint-{{ q.id }}">
+          گزینه انتخابی: <strong id="chosen-label-{{ q.id }}"></strong>
+        </div>
+        <button type="button" class="btn-confirm" id="btn-confirm-{{ q.id }}" onclick="confirmAnswer({{ q.id }})">
+          ✅ تایید پاسخ
+        </button>
+      </div>
+
+      {% else %}
+      <!-- سوال تشریحی -->
+      <textarea name="q_{{ q.id }}" id="ta-{{ q.id }}" class="form-control" rows="5"
+        placeholder="پاسخ تشریحی خود را اینجا بنویسید..." style="margin-top:12px;"></textarea>
+
+      <!-- آپلود فایل برای تشریحی -->
+      <div class="file-upload-area" id="upload-area-{{ q.id }}" onclick="document.getElementById('file-input-{{ q.id }}').click()">
+        <input type="file" id="file-input-{{ q.id }}" accept="image/*,.pdf" multiple
+               onchange="handleFileSelect({{ q.id }}, this)">
+        <div class="file-upload-icon">📎</div>
+        <div class="file-upload-text">
+          <strong>انتخاب فایل</strong> یا اینجا رها کنید<br>
+          <span style="font-size:.75rem;">عکس (JPG, PNG, ...) یا PDF — حداکثر ۱۰ مگابایت</span>
+        </div>
+      </div>
+      <div class="file-list" id="file-list-{{ q.id }}"></div>
+
+      <!-- نوار تایید تشریحی -->
+      <div class="confirm-bar hidden" id="confirm-bar-{{ q.id }}">
+        <div class="confirm-hint has-answer">پاسخ شما آماده ارسال است</div>
+        <button type="button" class="btn-edit" onclick="editDescAnswer({{ q.id }})">✎ ویرایش</button>
+        <button type="button" class="btn-confirm" onclick="confirmDescAnswer({{ q.id }})">✅ تایید پاسخ</button>
+      </div>
+      {% endif %}
+
+      {% if q.time_limit and q.time_limit > 0 %}
+      <div class="q-timer-bar">
+        <div class="q-timer-fill" id="fill-{{ q.qid if q.qid is defined else q.id }}"></div>
+      </div>
+      <div class="q-timer-label" id="lbl-{{ q.id }}">⏱ {{ q.time_limit }} ثانیه باقی‌مانده</div>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+
+  <!-- صفحه پایان -->
+  <div class="done-screen" id="done-screen">
+    <div style="font-size:3.5rem;margin-bottom:16px;">✅</div>
+    <div style="font-size:1.3rem;font-weight:700;margin-bottom:8px;">همه سوالات تمام شد</div>
+    <div style="color:var(--text-muted);font-size:.88rem;margin-bottom:32px;">
+      برای ثبت نهایی دکمه زیر را بزنید
+    </div>
+    <button class="btn-submit-final" onclick="doFinalSubmit()">✅ ارسال نهایی آزمون</button>
+  </div>
+
+</div><!-- /exam-body -->
+
+<!-- نوار پایین -->
+<div class="nav-bar" id="nav-bar">
+  <div style="font-size:.85rem;color:var(--text-muted);text-align:center;width:100%;" id="nav-hint">پاسخ خود را انتخاب کنید</div>
+</div>
+
+<script src="/static/js/main.js"></script>
+<script src="/static/js/ultra.js"></script>
+<script>
+/* =========================================================
+   داده‌های سوالات از سرور
+   ========================================================= */
+const QS = [
+  {% for q in questions %}
+  { idx:{{ loop.index0 }}, qid:{{ q.id }}, limit:{{ q.time_limit if q.time_limit else 0 }}, type:"{{ q.question_type }}" }{% if not loop.last %},{% endif %}
+  {% endfor %}
+];
+const TOTAL = QS.length;
+
+let curIdx       = 0;
+let savedAnswers = {};       // { qid: value }
+let savedFiles   = {};       // { qid: FileList array }
+let confirmedQ   = new Set(); // سوالاتی که تایید شدن
+let pendingConfirm = false;  // آیا منتظر تایید هستیم؟
+let activeTimer  = null;
+let editingMC    = {};       // { qid: true } سوالاتی که در حال ویرایش هستند
+
+/* =========================================================
+   کمکی: خواندن جواب فعلی
+   ========================================================= */
+function readAnswer(q) {
+  if (q.type === 'multiple_choice') {
+    const r = document.querySelector(`input[name="q_${q.qid}_live"]:checked`);
+    return r ? r.value : null;
+  } else {
+    const ta = document.getElementById(`ta-${q.qid}`);
+    return ta && ta.value.trim() ? ta.value.trim() : null;
+  }
+}
+
+function getOptionLabel(qid, val) {
+  const lbl = document.querySelector(`label[for="q${qid}_${val}"]`);
+  return lbl ? lbl.textContent.trim() : val.toUpperCase();
+}
+
+/* =========================================================
+   آپدیت راهنمای پایین صفحه
+   ========================================================= */
+function refreshBtn() {
+  const q = QS[curIdx];
+  const hint = document.getElementById('nav-hint');
+  const confirmed = confirmedQ.has(q.qid);
+  const isLast = curIdx === TOTAL - 1;
+
+  if (confirmed) {
+    hint.textContent = isLast ? '✅ پاسخ تایید شد — در حال اتمام آزمون...' : '✅ پاسخ تایید شد — در حال رفتن به سوال بعد...';
+  } else {
+    const ans = readAnswer(q);
+    if (q.type === 'multiple_choice') {
+      hint.textContent = ans
+        ? 'برای رفتن به سوال بعد، دکمه «تایید پاسخ» را بزنید'
+        : 'پاسخ خود را انتخاب کنید';
+    } else {
+      hint.textContent = ans
+        ? 'برای رفتن به سوال بعد، دکمه «تایید پاسخ» را بزنید'
+        : 'پاسخ تشریحی خود را بنویسید';
+    }
+  }
+}
+
+/* =========================================================
+   نمایش / مخفی کردن نوار تایید
+   ========================================================= */
+function showConfirmBar(qid, optionLabel) {
+  const bar = document.getElementById(`confirm-bar-${qid}`);
+  if (!bar) return;
+  bar.classList.remove('hidden');
+  const lbl = document.getElementById(`chosen-label-${qid}`);
+  if (lbl && optionLabel) lbl.textContent = optionLabel;
+}
+
+function hideConfirmBar(qid) {
+  const bar = document.getElementById(`confirm-bar-${qid}`);
+  if (bar) bar.classList.add('hidden');
+}
+
+/* =========================================================
+   تایید پاسخ تستی
+   ========================================================= */
+function confirmAnswer(qid) {
+  const q = QS.find(q => q.qid === qid);
+  if (!q) return;
+  const ans = readAnswer(q);
+  if (!ans) { showToast('لطفاً یک گزینه را انتخاب کنید', 'warning'); return; }
+
+  savedAnswers[qid] = ans;
+  confirmedQ.add(qid);
+  hideConfirmBar(qid);
+  lockMCSlide(qid, ans, true);
+
+  const fill  = document.getElementById(`fill-${qid}`);
+  const lbl   = document.getElementById(`lbl-${qid}`);
+  if (fill)  { fill.style.width='100%'; fill.style.background='var(--success)'; }
+  if (lbl)   { lbl.textContent='✅ پاسخ تایید شد'; lbl.className='q-timer-label'; }
+
+  stopQTimer();
+  updateDots(curIdx, 'done');
+  refreshBtn();
+  showToast('پاسخ شما ثبت شد', 'success');
+
+  // رفتن خودکار به سوال بعد (تایید پاسخ = رفتن به سوال بعد)
+  goToNextAfterConfirm(qid);
+}
+
+/* =========================================================
+   ویرایش پاسخ تستی (بعد از تایید)
+   ========================================================= */
+function editAnswer(qid) {
+  const q = QS.find(q => q.qid === qid);
+  if (!q) return;
+  confirmedQ.delete(qid);
+  delete savedAnswers[qid];
+  editingMC[qid] = true;
+
+  // فعال کردن مجدد radio‌ها
+  document.querySelectorAll(`input[name="q_${qid}_live"]`).forEach(r => r.disabled = false);
+  const card = document.getElementById(`card-${qid}`);
+  if (card) {
+    card.classList.remove('card-locked-ok', 'card-locked-exp');
+    card.style.pointerEvents = '';
+  }
+  const slide = document.getElementById(`slide-${curIdx}`);
+  if (slide) slide.style.pointerEvents = '';
+
+  hideConfirmBar(qid);
+  updateDots(curIdx, null);
+  refreshBtn();
+
+  // ریستارت تایمر اگه داشت
+  if (q.limit > 0) startQTimer(q);
+  showToast('می‌توانید پاسخ خود را تغییر دهید', 'info');
+}
+
+/* =========================================================
+   تایید پاسخ تشریحی
+   ========================================================= */
+function confirmDescAnswer(qid) {
+  const q = QS.find(q => q.qid === qid);
+  if (!q) return;
+  const ans = readAnswer(q);
+  if (!ans && (!savedFiles[qid] || savedFiles[qid].length === 0)) {
+    showToast('هیچ پاسخ یا فایلی وارد نشده است', 'warning'); return;
+  }
+  if (ans) savedAnswers[qid] = ans;
+  confirmedQ.add(qid);
+  hideConfirmBar(qid);
+
+  // disable textarea
+  const ta = document.getElementById(`ta-${qid}`);
+  if (ta) ta.disabled = true;
+  const uploadArea = document.getElementById(`upload-area-${qid}`);
+  if (uploadArea) { uploadArea.style.pointerEvents='none'; uploadArea.style.opacity='.5'; }
+  const card = document.getElementById(`card-${qid}`);
+  if (card) card.classList.add('card-locked-ok');
+
+  stopQTimer();
+  updateDots(curIdx, 'done');
+  refreshBtn();
+  showToast('پاسخ شما ثبت شد', 'success');
+
+  // رفتن خودکار به سوال بعد (تایید پاسخ = رفتن به سوال بعد)
+  goToNextAfterConfirm(qid);
+}
+
+/* =========================================================
+   ویرایش پاسخ تشریحی
+   ========================================================= */
+function editDescAnswer(qid) {
+  confirmedQ.delete(qid);
+  delete savedAnswers[qid];
+
+  const ta = document.getElementById(`ta-${qid}`);
+  if (ta) ta.disabled = false;
+  const uploadArea = document.getElementById(`upload-area-${qid}`);
+  if (uploadArea) { uploadArea.style.pointerEvents=''; uploadArea.style.opacity=''; }
+  const card = document.getElementById(`card-${qid}`);
+  if (card) card.classList.remove('card-locked-ok', 'card-locked-exp');
+
+  hideConfirmBar(qid);
+  updateDots(curIdx, null);
+  refreshBtn();
+
+  const q = QS.find(q => q.qid === qid);
+  if (q && q.limit > 0) startQTimer(q);
+  showToast('پاسخ قابل ویرایش است', 'info');
+}
+
+/* =========================================================
+   lock کردن گزینه‌های تستی (نه کارت کامل)
+   ========================================================= */
+function lockMCSlide(qid, ans, hasAnswer) {
+  document.querySelectorAll(`input[name="q_${qid}_live"]`).forEach(r => r.disabled = true);
+  const card = document.getElementById(`card-${qid}`);
+  if (card) card.classList.add(hasAnswer ? 'card-locked-ok' : 'card-locked-exp');
+}
+
+/* =========================================================
+   نمایش سوال شماره idx
+   ========================================================= */
+function showSlide(idx) {
+  document.querySelectorAll('.q-slide').forEach(s => s.classList.remove('active'));
+  document.getElementById('done-screen').classList.remove('active');
+
+  const slide = document.getElementById(`slide-${idx}`);
+  if (!slide) { showDone(); return; }
+  slide.classList.add('active');
+
+  document.getElementById('hdr-cur').textContent = idx + 1;
+  updateDots(idx);
+  refreshBtn();
+
+  const q = QS[idx];
+  if (q.limit > 0 && !confirmedQ.has(q.qid)) startQTimer(q);
+
+  attachListeners(q);
+}
+
+/* =========================================================
+   تایمر سوال
+   ========================================================= */
+function startQTimer(q) {
+  if (activeTimer) clearInterval(activeTimer);
+
+  const fill  = document.getElementById(`fill-${q.qid}`);
+  const lbl   = document.getElementById(`lbl-${q.qid}`);
+  const badge = document.getElementById(`q-badge-${q.qid}`);
+  if (!fill || !lbl) return;
+
+  const endAt = Date.now() + q.limit * 1000;
+
+  activeTimer = setInterval(() => {
+    const rem = Math.max(0, Math.round((endAt - Date.now()) / 1000));
+    const pct = (rem / q.limit) * 100;
+
+    fill.style.width = pct + '%';
+
+    const m = Math.floor(rem / 60), s = rem % 60;
+    lbl.textContent = `⏱ ${m > 0 ? m + ':' + String(s).padStart(2,'0') : rem} ثانیه باقی‌مانده`;
+
+    if (rem <= 10) {
+      fill.style.background = '#ff5f6d'; lbl.className = 'q-timer-label crit';
+      if (badge) { badge.style.background='rgba(255,95,109,.2)'; badge.style.color='#ff5f6d'; }
+    } else if (rem <= Math.floor(q.limit * .3)) {
+      fill.style.background = '#ffb347'; lbl.className = 'q-timer-label warn';
+      if (badge) { badge.style.background='rgba(255,179,71,.2)'; badge.style.color='#ffb347'; }
+    } else {
+      fill.style.background = 'var(--accent)'; lbl.className = 'q-timer-label';
+      if (badge) { badge.style.background=''; badge.style.color=''; }
+    }
+
+    if (rem <= 0) {
+      clearInterval(activeTimer); activeTimer = null;
+      onTimerExpired(q);
+    }
+  }, 400);
+}
+
+function stopQTimer() {
+  if (activeTimer) { clearInterval(activeTimer); activeTimer = null; }
+}
+
+/* =========================================================
+   وقت تموم شد
+   ========================================================= */
+function onTimerExpired(q) {
+  const fill  = document.getElementById(`fill-${q.qid}`);
+  const lbl   = document.getElementById(`lbl-${q.qid}`);
+  const badge = document.getElementById(`q-badge-${q.qid}`);
+
+  if (fill) { fill.style.width='0%'; fill.style.background='#ff5f6d'; }
+  if (lbl)  { lbl.textContent='⛔ زمان این سوال تمام شد'; lbl.className='q-timer-label crit'; }
+  if (badge){ badge.style.background='rgba(255,95,109,.2)'; badge.style.color='#ff5f6d'; }
+
+  // ذخیره پاسخ (حتی بدون تایید) اگه چیزی انتخاب شده بود
+  const ans = readAnswer(q);
+  if (ans && !savedAnswers[q.qid]) savedAnswers[q.qid] = ans;
+
+  confirmedQ.add(q.qid); // تایمر تمام = تایید اجباری
+  hideConfirmBar(q.qid);
+
+  if (q.type === 'multiple_choice') {
+    lockMCSlide(q.qid, ans, !!ans);
+  } else {
+    const ta = document.getElementById(`ta-${q.qid}`);
+    if (ta) ta.disabled = true;
+  }
+
+  const card = document.getElementById(`card-${q.qid}`);
+  if (card) card.classList.add(ans ? 'card-locked-ok' : 'card-locked-exp');
+
+  updateDots(curIdx, ans ? 'done' : 'expired');
+  showToast(`زمان سوال ${curIdx + 1} به پایان رسید`, 'warning');
+  refreshBtn();
+
+  // انتقال خودکار بعد از ۳ ثانیه
+  setTimeout(() => { if (curIdx === QS.findIndex(qq => qq.qid === q.qid)) advance(); }, 3000);
+}
+
+/* =========================================================
+   رفتن خودکار به سوال بعد بعد از تایید پاسخ
+   (با کمی تاخیر تا کاربر بازخورد ✅ تایید را ببیند)
+   ========================================================= */
+function goToNextAfterConfirm(qid) {
+  setTimeout(() => {
+    // اگه کاربر دستی جای دیگه‌ای رفته یا چیزی تغییر کرده، فقط وقتی پیش برو که هنوز همون سوال فعاله
+    const q = QS[curIdx];
+    if (q && q.qid === qid && confirmedQ.has(qid)) {
+      advance();
+    }
+  }, 500);
+}
+
+/* =========================================================
+   پیشروی
+   ========================================================= */
+function advance() {
+  stopQTimer();
+  curIdx++;
+  if (curIdx >= TOTAL) { showDone(); return; }
+  showSlide(curIdx);
+}
+
+/* =========================================================
+   گوش دادن به تغییر پاسخ
+   ========================================================= */
+function attachListeners(q) {
+  if (confirmedQ.has(q.qid)) return;
+
+  if (q.type === 'multiple_choice') {
+    document.querySelectorAll(`input[name="q_${q.qid}_live"]`).forEach(r => {
+      r.addEventListener('change', () => {
+        if (confirmedQ.has(q.qid)) return;
+        const val = r.value;
+        const lbl = getOptionLabel(q.qid, val);
+        const shortLbl = lbl.substring(0, 40) + (lbl.length > 40 ? '…' : '');
+        showConfirmBar(q.qid, shortLbl);
+        refreshBtn();
+      });
+    });
+  } else {
+    const ta = document.getElementById(`ta-${q.qid}`);
+    if (!ta) return;
+    ta.addEventListener('input', () => {
+      if (confirmedQ.has(q.qid)) return;
+      if (ta.value.trim()) {
+        showConfirmBar(q.qid);
+      } else {
+        hideConfirmBar(q.qid);
+      }
+      refreshBtn();
+    });
+  }
+}
+
+/* =========================================================
+   آپلود فایل
+   ========================================================= */
+function handleFileSelect(qid, input) {
+  const files = Array.from(input.files);
+  if (!savedFiles[qid]) savedFiles[qid] = [];
+
+  for (const f of files) {
+    if (f.size > 10 * 1024 * 1024) {
+      showToast(`فایل "${f.name}" بزرگتر از ۱۰ مگابایت است`, 'warning');
+      continue;
+    }
+    savedFiles[qid].push(f);
+  }
+  renderFileList(qid);
+
+  // نمایش نوار تایید اگه متن یا فایل داشت
+  const ta = document.getElementById(`ta-${qid}`);
+  const hasContent = (ta && ta.value.trim()) || savedFiles[qid].length > 0;
+  if (hasContent && !confirmedQ.has(qid)) showConfirmBar(qid);
+}
+
+function renderFileList(qid) {
+  const container = document.getElementById(`file-list-${qid}`);
+  if (!container) return;
+  container.innerHTML = '';
+  (savedFiles[qid] || []).forEach((f, i) => {
+    const isPDF = f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf');
+    const icon = isPDF ? '📄' : '🖼️';
+    const size = f.size < 1024*1024 ? (f.size/1024).toFixed(0) + ' KB' : (f.size/1024/1024).toFixed(1) + ' MB';
+    const div = document.createElement('div');
+    div.className = 'file-item';
+    div.innerHTML = `
+      <span class="file-item-icon">${icon}</span>
+      <span class="file-item-name">${f.name}</span>
+      <span class="file-item-size">${size}</span>
+      <button class="file-item-remove" onclick="removeFile(${qid}, ${i})" title="حذف">✕</button>
+    `;
+    container.appendChild(div);
+  });
+}
+
+function removeFile(qid, idx) {
+  if (savedFiles[qid]) {
+    savedFiles[qid].splice(idx, 1);
+    renderFileList(qid);
+  }
+}
+
+// drag & drop
+document.querySelectorAll('.file-upload-area').forEach(area => {
+  area.addEventListener('dragover', e => { e.preventDefault(); area.classList.add('dragover'); });
+  area.addEventListener('dragleave', () => area.classList.remove('dragover'));
+  area.addEventListener('drop', e => {
+    e.preventDefault(); area.classList.remove('dragover');
+    const qid = parseInt(area.id.replace('upload-area-', ''));
+    const inp = document.getElementById(`file-input-${qid}`);
+    if (inp && e.dataTransfer.files.length) {
+      // شبیه‌سازی تغییر input
+      const dt = new DataTransfer();
+      for (const f of e.dataTransfer.files) dt.items.add(f);
+      inp.files = dt.files;
+      handleFileSelect(qid, inp);
+    }
+  });
+});
+
+/* =========================================================
+   نقطه‌های پیشرفت
+   ========================================================= */
+function updateDots(activeIdx, state) {
+  QS.forEach((q, i) => {
+    const dot = document.getElementById(`dot-${i}`);
+    if (!dot) return;
+    dot.className = 'q-dot';
+    if (i === activeIdx && !state) {
+      dot.classList.add('dot-active');
+    } else if (state && i === activeIdx) {
+      dot.classList.add(state === 'done' ? 'dot-done' : 'dot-expired');
+    } else if (confirmedQ.has(q.qid) || savedAnswers[q.qid] !== undefined) {
+      dot.classList.add('dot-done');
+    }
+  });
+}
+
+/* =========================================================
+   صفحه پایان
+   ========================================================= */
+function showDone() {
+  document.querySelectorAll('.q-slide').forEach(s => s.classList.remove('active'));
+  document.getElementById('done-screen').classList.add('active');
+  document.getElementById('nav-bar').style.display = 'none';
+  document.getElementById('hdr-cur').textContent = TOTAL;
+
+  QS.forEach((q, i) => {
+    const dot = document.getElementById(`dot-${i}`);
+    if (!dot) return;
+    dot.className = 'q-dot ' + (savedAnswers[q.qid] || confirmedQ.has(q.qid) ? 'dot-done' : 'dot-expired');
+  });
+
+  // تزریق جواب‌ها به فرم
+  const form = document.getElementById('exam-form');
+  Object.entries(savedAnswers).forEach(([qid, val]) => {
+    const inp = document.createElement('input');
+    inp.type = 'hidden'; inp.name = `q_${qid}`; inp.value = val;
+    form.appendChild(inp);
+  });
+}
+
+/* =========================================================
+   ارسال نهایی با فایل‌ها
+   ========================================================= */
+let _submitInFlight = false;
+
+async function doFinalSubmit(isAutoSubmit) {
+  if (_submitInFlight) return;           // جلوگیری از ارسال تکراری
+  if (!isAutoSubmit) {
+    if (!confirm('آیا از ارسال نهایی آزمون اطمینان دارید؟')) return;
+  }
+  _submitInFlight = true;
+
+  const examId = document.getElementById('exam-form')?.dataset.examId;
+
+  // ساخت FormData با جواب‌ها + فایل‌ها (همان پاسخ‌های واقعاً تایید شده توسط دانشجو)
+  const fd = new FormData();
+
+  // ── FIX: اگه دانشجو هیچ پاسخی ثبت نکرده باشه، FormData کاملاً خالی می‌ماند.
+  // یک بدنه‌ی multipart/form-data کاملاً خالی (بدون حتی یک فیلد) باعث خطای
+  // پارس در سمت سرور می‌شود و به شکل {"detail":"Method Not Allowed"} نمایش
+  // داده می‌شود. برای جلوگیری از این حالت، همیشه حداقل یک فیلد ثابت می‌فرستیم.
+  fd.append('_submitted', '1');
+
+  Object.entries(savedAnswers).forEach(([qid, val]) => {
+    fd.append(`q_${qid}`, val);
+  });
+
+  // اضافه کردن فایل‌های تشریحی
+  Object.entries(savedFiles).forEach(([qid, files]) => {
+    files.forEach((f, i) => {
+      fd.append(`file_${qid}_${i}`, f, f.name);
+    });
+    fd.append(`file_count_${qid}`, files.length);
+  });
+
+  try {
+    const btn = document.querySelector('.btn-submit-final');
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ در حال ارسال...'; }
+    if (isAutoSubmit) showToast('زمان آزمون تمام شد — پاسخ‌ها در حال ثبت نهایی هستند', 'warning');
+
+    const resp = await fetch(`/exams/${examId}/submit`, {
+      method: 'POST', body: fd
+    });
+    if (resp.redirected) {
+      window.location.href = resp.url;
+    } else {
+      window.location.href = resp.url || '/dashboard';
+    }
+  } catch(e) {
+    _submitInFlight = false;
+    showToast('خطا در ارسال پاسخ‌ها — لطفاً دوباره تلاش کنید', 'error');
+    const btn = document.querySelector('.btn-submit-final');
+    if (btn) { btn.disabled = false; btn.textContent = '✅ ارسال نهایی آزمون'; }
+  }
+}
+window.doFinalSubmit = doFinalSubmit;
+
+
+/* =========================================================
+   toast ساده (fallback اگه main.js نداشت)
+   ========================================================= */
+if (typeof showToast === 'undefined') {
+  window.showToast = function(msg, type) {
+    console.log(`[${type}] ${msg}`);
+  };
+}
+
+/* =========================================================
+   شروع
+   ========================================================= */
+startExamTimer({{ exam.duration_minutes }}, "{{ personal_deadline.isoformat() }}Z");
+showSlide(0);
+</script>
+</body>
+</html>

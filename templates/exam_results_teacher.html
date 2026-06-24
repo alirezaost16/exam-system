@@ -1,0 +1,268 @@
+{% extends "base.html" %}
+{% block title %}نتایج آزمون — {{ exam.title }}{% endblock %}
+
+{% block content %}
+<div class="topbar fade-in">
+  <div>
+    <div class="page-title">📊 نتایج آزمون</div>
+    <div class="page-subtitle">{{ exam.title }}</div>
+  </div>
+  <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+    <span class="badge badge-cyan">{{ results_data|length }} شرکت‌کننده</span>
+    {% if pending_appeals_count > 0 %}
+    <span class="badge badge-amber" style="animation: pulse 2s infinite;">📨 {{ pending_appeals_count }} اعتراض جدید</span>
+    {% endif %}
+    <a href="/exams/{{ exam.id }}/questions" class="btn btn-secondary">← سوالات</a>
+    <a href="/dashboard" class="btn btn-secondary">داشبورد</a>
+  </div>
+</div>
+
+{% if request.query_params.get('appeal_reviewed') %}
+<div class="alert alert-success fade-in" style="margin-bottom:16px;">✅ پاسخ شما به اعتراض با موفقیت ثبت شد.</div>
+{% endif %}
+
+<!-- Stats -->
+<div class="stats-grid fade-in fade-in-1">
+  <div class="stat-card cyan">
+    <div class="stat-icon">👥</div>
+    <div class="stat-value">{{ results_data|length }}</div>
+    <div class="stat-label">شرکت‌کننده</div>
+  </div>
+  <div class="stat-card green">
+    <div class="stat-icon">✅</div>
+    <div class="stat-value">{{ results_data|selectattr('result.submitted_at')|list|length }}</div>
+    <div class="stat-label">تحویل داده</div>
+  </div>
+  <div class="stat-card amber">
+    <div class="stat-icon">🏆</div>
+    <div class="stat-value">
+      {% set submitted = results_data|selectattr('result.submitted_at')|list %}
+      {% if submitted %}
+        {{ "%.1f"|format(submitted|map(attribute='result')|map(attribute='score')|sum / submitted|length) }}
+      {% else %}—{% endif %}
+    </div>
+    <div class="stat-label">میانگین نمره</div>
+  </div>
+  <div class="stat-card violet">
+    <div class="stat-icon">📋</div>
+    <div class="stat-value">{{ total_points }}</div>
+    <div class="stat-label">نمره کل</div>
+  </div>
+</div>
+
+<!-- ═══════════ بخش ویژه اعتراضات این آزمون ═══════════ -->
+{% if exam_appeals %}
+<div class="card fade-in fade-in-2" id="appeals-section"
+     style="border:1px solid {% if pending_appeals_count > 0 %}rgba(255,179,71,.4){% else %}var(--border){% endif %};">
+  <div class="card-header">
+    <div class="card-title">📨 اعتراضات این آزمون</div>
+    {% if pending_appeals_count > 0 %}
+      <span class="badge badge-amber" style="animation: pulse 2s infinite;">{{ pending_appeals_count }} در انتظار بررسی</span>
+    {% else %}
+      <span class="badge badge-gray">{{ exam_appeals|length }} اعتراض — همه بررسی شده</span>
+    {% endif %}
+  </div>
+
+  <div style="display:flex; flex-direction:column; gap:12px; padding:6px 16px 16px;">
+    {% for entry in exam_appeals %}
+    {% set appeal = entry.appeal %}
+    {% set student = entry.student %}
+    <div style="border-radius:var(--radius-sm); border:1px solid
+      {% if appeal.status == 'pending' %}rgba(255,179,71,.4){% else %}var(--border){% endif %};
+      overflow:hidden;">
+      <div style="padding:10px 16px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+        background:{% if appeal.status == 'pending' %}rgba(255,179,71,.06){% else %}var(--bg-elevated){% endif %};">
+        <span style="font-size:.8rem; font-weight:700; color:var(--text-secondary);">
+          👤 {{ student.full_name if student else '—' }}
+        </span>
+        <span style="font-size:.72rem; color:var(--text-muted);">
+          {{ appeal.created_at.strftime('%Y/%m/%d %H:%M') if appeal.created_at else '' }}
+        </span>
+        {% if appeal.status == 'pending' %}
+          <span class="badge badge-amber">در انتظار بررسی</span>
+        {% elif appeal.status == 'accepted' %}
+          <span class="badge badge-green">✅ پذیرفته شد</span>
+        {% else %}
+          <span class="badge badge-red">✗ رد شد</span>
+        {% endif %}
+        <a href="/results/{{ appeal.result_id }}" class="btn btn-ghost btn-sm" style="margin-right:auto;">👁 مشاهده پاسخنامه</a>
+      </div>
+      <div style="padding:14px 16px; border-top:1px solid var(--border); background:var(--bg-card);">
+        <div style="display:flex; align-items:flex-start; gap:12px; flex-wrap:wrap;">
+          <div style="flex:1; min-width:200px;">
+            <div style="font-size:.72rem; color:var(--text-muted); margin-bottom:4px;">متن اعتراض</div>
+            <div style="font-size:.88rem; color:var(--text-primary); line-height:1.7; white-space:pre-wrap; background:var(--bg-elevated); padding:10px 12px; border-radius:var(--radius-sm); border:1px solid var(--border);">{{ appeal.appeal_text }}</div>
+            {% if appeal.teacher_reply %}
+            <div style="margin-top:8px;">
+              <div style="font-size:.72rem; color:#8b5cf6; margin-bottom:4px;">پاسخ استاد:</div>
+              <div style="font-size:.85rem; color:var(--text-primary); line-height:1.7; white-space:pre-wrap; background:rgba(139,92,246,.05); padding:10px 12px; border-radius:var(--radius-sm); border:1px solid rgba(139,92,246,.2);">{{ appeal.teacher_reply }}</div>
+            </div>
+            {% endif %}
+          </div>
+          {% if appeal.status == 'pending' %}
+          <div style="min-width:260px; background:var(--bg-elevated); border-radius:var(--radius-sm); padding:14px; border:1px solid var(--border);">
+            <div style="font-size:.75rem; color:var(--text-muted); margin-bottom:10px; font-weight:600;">بررسی اعتراض</div>
+            <form method="POST" action="/appeals/{{ appeal.id }}/review">
+              <input type="hidden" name="redirect_to" value="/exams/{{ exam.id }}/results">
+              <div style="margin-bottom:10px;">
+                <textarea name="teacher_reply" rows="3" placeholder="پاسخ خود را بنویسید..."
+                  style="width:100%; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-sm);
+                         color:var(--text-primary); padding:8px 10px; font-size:.82rem; resize:vertical; font-family:inherit;
+                         line-height:1.6; box-sizing:border-box; outline:none;"></textarea>
+              </div>
+              <div style="margin-bottom:10px; display:flex; align-items:center; gap:8px;">
+                <label style="font-size:.78rem; color:var(--text-muted);">نمره جدید (در صورت قبول):</label>
+                <input type="number" name="new_score" min="0" max="{{ total_points }}" step="0.5"
+                  placeholder="—"
+                  style="width:80px; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-sm);
+                         color:var(--text-primary); padding:6px 8px; font-size:.85rem; outline:none; text-align:center;">
+              </div>
+              <div style="display:flex; gap:8px;">
+                <button type="submit" name="decision" value="accepted"
+                  class="btn btn-sm" style="flex:1; background:rgba(0,229,160,.15); color:var(--success); border:1px solid rgba(0,229,160,.3);">
+                  ✅ قبول
+                </button>
+                <button type="submit" name="decision" value="rejected"
+                  class="btn btn-sm" style="flex:1; background:rgba(255,95,109,.12); color:var(--danger); border:1px solid rgba(255,95,109,.3);">
+                  ✗ رد
+                </button>
+              </div>
+            </form>
+          </div>
+          {% elif appeal.status == 'accepted' and appeal.new_score is not none %}
+          <div style="min-width:130px; text-align:center; font-size:.78rem; color:var(--text-muted);">
+            {{ "%.1f"|format(appeal.old_score) }} ← {{ "%.1f"|format(appeal.new_score) }}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<div class="card fade-in fade-in-3">
+  <div class="card-header">
+    <div class="card-title">لیست دانشجویان</div>
+  </div>
+
+  {% if results_data %}
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>نام و نام خانوادگی</th>
+          <th>نام کاربری</th>
+          <th>نمره تستی</th>
+          <th>نمره تشریحی</th>
+          <th>نمره کل</th>
+          <th>از مجموع</th>
+          <th>درصد</th>
+          <th>وضعیت تحویل</th>
+          <th>تصحیح تشریحی</th>
+          <th>نتیجه</th>
+          <th>اعتراض</th>
+          <th>عملیات</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in results_data %}
+        <tr {% if item.pending_appeal %}style="background:rgba(255,179,71,.04);"{% endif %}>
+          <td style="color:var(--text-muted);">{{ loop.index }}</td>
+          <td style="font-weight:600;">{{ item.student.full_name if item.student else '—' }}</td>
+          <td style="color:var(--text-muted); font-size:.82rem;">{{ item.student.username if item.student else '—' }}</td>
+          <td>
+            <span class="badge badge-cyan">
+              {{ "%.1f"|format(item.mc_score) if item.result.submitted_at else '—' }}
+            </span>
+          </td>
+          <td>
+            <span class="badge {% if item.result.descriptive_graded %}badge-violet{% else %}badge-gray{% endif %}">
+              {% if item.result.submitted_at %}
+                {{ "%.1f"|format(item.result.descriptive_score or 0) }}
+              {% else %}—{% endif %}
+            </span>
+          </td>
+          <td>
+            <span class="badge {% if item.result.submitted_at and total_points > 0 and (item.result.score / total_points) >= 0.6 %}badge-green{% elif item.result.submitted_at %}badge-red{% else %}badge-gray{% endif %}">
+              {{ "%.1f"|format(item.result.score) if item.result.submitted_at else '—' }}
+            </span>
+          </td>
+          <td style="color:var(--text-muted);">{{ total_points }}</td>
+          <td>
+            {% if item.result.submitted_at and total_points > 0 %}
+              {% set pct = (item.result.score / total_points * 100)|round(1) %}
+              <span style="color:{% if pct >= 60 %}var(--success){% else %}#ff5f6d{% endif %}; font-weight:600;">
+                {{ pct }}٪
+              </span>
+            {% else %}
+              <span style="color:var(--text-muted);">—</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if item.result.submitted_at %}
+              <span class="badge badge-green">✅ تحویل داده</span>
+            {% else %}
+              <span class="badge badge-amber">⏳ در جریان</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if item.result.submitted_at and item.has_descriptive %}
+              {% if item.result.descriptive_graded %}
+                <span class="badge badge-green">✅ تصحیح شده</span>
+              {% else %}
+                <a href="/results/{{ item.result.id }}/grade" class="badge badge-amber" style="text-decoration:none; cursor:pointer;">
+                  ✏️ نیاز به تصحیح
+                </a>
+              {% endif %}
+            {% elif item.result.submitted_at %}
+              <span style="color:var(--text-muted); font-size:.78rem;">بدون تشریحی</span>
+            {% else %}
+              <span style="color:var(--text-muted);">—</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if item.score_status == 'قبول' %}
+              <span class="badge badge-green">✓ قبول</span>
+            {% elif item.score_status == 'مردود' %}
+              <span class="badge badge-red">✗ مردود</span>
+            {% else %}
+              <span style="color:var(--text-muted);">—</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if item.pending_appeal %}
+              <a href="#appeals-section" class="badge badge-amber" style="text-decoration:none; cursor:pointer;">📨 {{ item.appeals|length }} اعتراض</a>
+            {% elif item.appeals %}
+              <a href="#appeals-section" class="badge badge-gray" style="text-decoration:none; cursor:pointer;">{{ item.appeals|length }} اعتراض</a>
+            {% else %}
+              <span style="color:var(--text-muted); font-size:.78rem;">—</span>
+            {% endif %}
+          </td>
+          <td>
+            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+              {% if item.result.submitted_at %}
+                <a href="/results/{{ item.result.id }}" class="btn btn-ghost btn-sm">👁 مشاهده</a>
+                {% if item.has_descriptive %}
+                <a href="/results/{{ item.result.id }}/grade" class="btn btn-secondary btn-sm">✏️ تصحیح</a>
+                {% endif %}
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-icon">📭</div>
+    <div class="empty-title">هنوز هیچ دانشجویی شرکت نکرده</div>
+    <div class="empty-desc">پس از شروع آزمون، نتایج اینجا نمایش داده می‌شود</div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

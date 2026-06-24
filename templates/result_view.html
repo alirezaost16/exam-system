@@ -1,0 +1,318 @@
+{% extends "base.html" %}
+{% block title %}نتیجه آزمون — {{ exam.title }}{% endblock %}
+
+{% block content %}
+<div class="topbar fade-in">
+  <div>
+    <div class="page-title">نتیجه آزمون 📊</div>
+    <div class="page-subtitle">{{ exam.title }}</div>
+  </div>
+  <div style="display:flex;gap:10px;">
+    <a href="/transcript" class="btn btn-secondary">📋 کارنامه</a>
+    <a href="/dashboard" class="btn btn-ghost">← داشبورد</a>
+  </div>
+</div>
+
+<!-- Score Hero -->
+<div class="card card-accent fade-in fade-in-1 score-hero" style="text-align:center; padding:40px; margin-bottom:20px;">
+  {% set pct = (result.score / total_points * 100) if total_points > 0 else 0 %}
+  {% set grade_class = 'high' if pct >= 75 else ('mid' if pct >= 50 else 'low') %}
+
+  <div class="score-ring score-ring--{{ grade_class }}">
+    <svg width="172" height="172" viewBox="0 0 172 172">
+      <defs>
+        <linearGradient id="scoreGradient-{{ result.id }}" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop class="grad-stop-1" offset="0%" />
+          <stop class="grad-stop-2" offset="100%" />
+        </linearGradient>
+        <filter id="scoreGlow-{{ result.id }}" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="3.2" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+
+      <!-- ticks -->
+      <g class="score-ring-ticks" stroke="var(--border)" stroke-width="2" stroke-linecap="round">
+        {% for i in range(40) %}
+        <line x1="86" y1="10" x2="86" y2="17" transform="rotate({{ i * 9 }} 86 86)" />
+        {% endfor %}
+      </g>
+
+      <!-- track -->
+      <circle cx="86" cy="86" r="66" fill="none" stroke="var(--border)" stroke-width="11" opacity=".55" />
+
+      <!-- progress -->
+      <circle id="score-circle" cx="86" cy="86" r="66" fill="none" stroke="url(#scoreGradient-{{ result.id }})"
+        stroke-width="11" stroke-linecap="round" filter="url(#scoreGlow-{{ result.id }})" />
+
+      <!-- leading dot -->
+
+    </svg>
+    <div class="score-ring-inner">
+      <div class="score-big" data-target="{{ result.score }}">{{ "%.1f"|format(result.score) }}</div>
+      <div class="score-total">از {{ "%.1f"|format(total_points) }}</div>
+      <div class="score-pct-badge">{{ "%.0f"|format(pct) }}٪</div>
+    </div>
+  </div>
+
+  <div class="score-headline score-headline--{{ grade_class }}">
+    {% if pct >= 75 %}🎉 عالی! آفرین!
+    {% elif pct >= 50 %}👍 قبول شدید
+    {% else %}📚 نیاز به مطالعه بیشتر
+    {% endif %}
+  </div>
+  <div class="score-subline">
+    <span class="score-subline-track"><span class="score-subline-fill score-subline-fill--{{ grade_class }}"
+        style="--fill-target:{{ pct if pct <= 100 else 100 }}%;"></span></span>
+    {{ "%.0f"|format(pct) }}٪ از نمره کل کسب کردید
+  </div>
+
+  {% if has_descriptive %}
+  <div style="margin-top:16px; padding:10px 16px; border-radius:var(--radius-sm); display:inline-block;
+    {% if result.descriptive_graded %}
+      background:rgba(0,229,160,.1); border:1px solid rgba(0,229,160,.3); color:var(--success);
+    {% else %}
+      background:rgba(255,179,71,.1); border:1px solid rgba(255,179,71,.3); color:#ffb347;
+    {% endif %}
+    font-size:.82rem; font-weight:600;">
+    {% if result.descriptive_graded %}
+    ✅ سوالات تشریحی تصحیح شده — نمره نهایی ثبت است
+    {% else %}
+    ⏳ سوالات تشریحی هنوز تصحیح نشده — نمره ممکن است تغییر کند
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {% if result.teacher_comment %}
+  <div
+    style="margin-top:16px; padding:14px 18px; background:rgba(139,92,246,.08); border:1px solid rgba(139,92,246,.2); border-radius:var(--radius-sm); text-align:right; max-width:500px; margin-left:auto; margin-right:auto;">
+    <div style="font-size:.72rem; color:#8b5cf6; font-weight:600; margin-bottom:4px;">💬 نظر استاد:</div>
+    <div style="font-size:.88rem; color:var(--text-primary); line-height:1.7;">{{ result.teacher_comment }}</div>
+  </div>
+  {% endif %}
+
+  <div style="display:flex; justify-content:center; gap:24px; margin-top:24px; flex-wrap:wrap;">
+    <div style="text-align:center;">
+      <div style="font-size:1.4rem; font-weight:700; color:var(--success);">
+        {{ questions|selectattr('is_correct','equalto',true)|list|length }}
+      </div>
+      <div style="font-size:.75rem; color:var(--text-muted);">پاسخ صحیح</div>
+    </div>
+    <div style="width:1px; background:var(--border);"></div>
+    <div style="text-align:center;">
+      <div style="font-size:1.4rem; font-weight:700; color:var(--danger);">
+        {{ questions|selectattr('is_correct','equalto',false)|list|length }}
+      </div>
+      <div style="font-size:.75rem; color:var(--text-muted);">پاسخ غلط</div>
+    </div>
+    <div style="width:1px; background:var(--border);"></div>
+    <div style="text-align:center;">
+      <div style="font-size:1.4rem; font-weight:700; color:var(--text-muted);">
+        {{ questions|selectattr('is_correct','none')|list|length }}
+      </div>
+      <div style="font-size:.75rem; color:var(--text-muted);">تشریحی</div>
+    </div>
+    <div style="width:1px; background:var(--border);"></div>
+    <div style="text-align:center;">
+      <div style="font-size:1.4rem; font-weight:700; color:var(--text-primary);">{{ questions|length }}</div>
+      <div style="font-size:.75rem; color:var(--text-muted);">کل سوالات</div>
+    </div>
+  </div>
+</div>
+
+<!-- Answer Review -->
+<div class="card fade-in fade-in-2">
+  <div class="card-header">
+    <div class="card-title">🔍 بررسی پاسخ‌ها</div>
+    <span class="badge badge-gray">{{ questions|length }} سوال</span>
+  </div>
+
+  {% for q in questions %}
+  <div class="question-card
+    {% if q.is_correct == true %}answer-correct
+    {% elif q.is_correct == false %}answer-wrong
+    {% endif %}" style="margin-bottom:14px;">
+
+    <div class="question-header">
+      <div class="question-number">{{ loop.index }}</div>
+      <div style="flex:1;">
+        <div class="question-text">{{ q.question_text }}</div>
+        <div style="margin-top:6px; display:flex; gap:8px; flex-wrap:wrap;">
+          <span class="badge badge-amber">{{ q.points }} نمره</span>
+          {% if q.is_correct == true %}
+          <span class="badge badge-green">✓ صحیح</span>
+          {% elif q.is_correct == false %}
+          <span class="badge badge-red">✗ غلط</span>
+          {% else %}
+          <span class="badge badge-violet">تشریحی</span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    {% if q.question_type == 'multiple_choice' and q.options_parsed is defined %}
+    <div class="options-grid" style="margin-top:12px; pointer-events:none;">
+      {% for key, val in q.options_parsed.items() %}
+      <div style="padding:10px 14px; border-radius:var(--radius-sm); font-size:.85rem; display:flex; align-items:center; gap:8px;
+        border: 1px solid
+          {% if key == q.correct_answer %}rgba(0,229,160,.5)
+          {% elif key == q.student_answer and key != q.correct_answer %}rgba(255,95,109,.5)
+          {% else %}var(--border){% endif %};
+        background:
+          {% if key == q.correct_answer %}rgba(0,229,160,.08)
+          {% elif key == q.student_answer and key != q.correct_answer %}rgba(255,95,109,.08)
+          {% else %}var(--bg-elevated){% endif %};
+        color:
+          {% if key == q.correct_answer %}var(--success)
+          {% elif key == q.student_answer and key != q.correct_answer %}var(--danger)
+          {% else %}var(--text-secondary){% endif %};">
+        <span style="font-weight:700; width:18px; flex-shrink:0;">{{ key.upper() }}</span>
+        {{ val }}
+        {% if key == q.correct_answer %}<span style="margin-right:auto;">✓</span>{% endif %}
+        {% if key == q.student_answer and key != q.correct_answer %}<span style="margin-right:auto;">✗</span>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+
+    {% if q.student_answer and q.student_answer != q.correct_answer %}
+    <div
+      style="margin-top:10px; font-size:.8rem; padding:8px 12px; background:rgba(255,95,109,.07); border-radius:var(--radius-sm); border:1px solid rgba(255,95,109,.15);">
+      <span style="color:var(--danger);">پاسخ شما: </span>
+      <span style="color:var(--text-secondary);">{{ q.student_answer.upper() }}</span>
+      <span style="color:var(--text-muted); margin: 0 8px;">|</span>
+      <span style="color:var(--success);">پاسخ صحیح: </span>
+      <span style="color:var(--success);">{{ q.correct_answer.upper() }}</span>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <!-- Descriptive answer -->
+    <div style="margin-top:12px;">
+      <div style="font-size:.75rem; color:var(--text-muted); margin-bottom:6px;">پاسخ شما:</div>
+      <div
+        style="background:var(--bg-elevated); border:1px solid var(--border); border-radius:var(--radius-sm); padding:12px; font-size:.88rem; color:var(--text-primary); line-height:1.7; min-height:60px; white-space:pre-wrap;">
+        {{ q.student_answer or '(بدون پاسخ)' }}
+      </div>
+      {% if result.descriptive_graded and q.given_descriptive_score is not none %}
+      <div
+        style="margin-top:8px; padding:10px 14px; background:rgba(139,92,246,.08); border:1px solid rgba(139,92,246,.25); border-radius:var(--radius-sm); display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+        <span style="color:#8b5cf6; font-weight:700;">نمره استاد:</span>
+        <span style="font-size:1.1rem; font-weight:700; color:var(--text-primary);">{{ q.given_descriptive_score
+          }}</span>
+        <span style="color:var(--text-muted); font-size:.8rem;">از {{ q.points }}</span>
+      </div>
+      {% else %}
+      <div class="alert alert-info" style="margin-top:10px; font-size:.78rem;">
+        📌 این سوال در انتظار تصحیح استاد است و نمره آن هنوز ثبت نشده
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+
+{% block extra_js %}
+<script>
+  animateScoreRing({{ result.score }}, {{ total_points }});
+</script>
+{% endblock %}
+
+<!-- ══ بخش اعتراض به نمره ══ -->
+{% if result.submitted_at and user.role == "student" %}
+<div class="card fade-in fade-in-3" style="margin-top:20px;">
+  <div class="card-header">
+    <div class="card-title">📨 اعتراض به نمره</div>
+    {% if appeal_pending %}
+    <span class="badge badge-amber">⏳ اعتراض در انتظار بررسی</span>
+    {% endif %}
+  </div>
+
+  <!-- پیام‌های وضعیت -->
+  {% if request.query_params.get('appeal_sent') %}
+  <div class="alert alert-success" style="margin-bottom:16px;">✅ اعتراض شما ثبت شد. استاد به زودی بررسی خواهد کرد.</div>
+  {% endif %}
+  {% if request.query_params.get('appeal_error') == 'duplicate' %}
+  <div class="alert alert-warning" style="margin-bottom:16px;">⏳ اعتراض شما قبلاً ثبت شده است. لطفاً منتظر بررسی استاد
+    بمانید.</div>
+  {% endif %}
+  {% if request.query_params.get('appeal_error') == 'short' %}
+  <div class="alert alert-warning" style="margin-bottom:16px;">✏️ متن اعتراض باید حداقل ۱۰ کاراکتر داشته باشد.</div>
+  {% endif %}
+
+  <!-- تاریخچه اعتراض‌ها -->
+  {% if appeals %}
+  <div style="margin-bottom:20px;">
+    {% for appeal in appeals %}
+    <div style="margin-bottom:14px; border-radius:var(--radius-sm); overflow:hidden; border:1px solid var(--border);">
+      <!-- هدر اعتراض -->
+      <div style="padding:12px 16px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+        {% if appeal.status == 'pending' %}background:rgba(255,179,71,.08);
+        {% elif appeal.status == 'accepted' %}background:rgba(0,229,160,.08);
+        {% else %}background:rgba(255,95,109,.08);{% endif %}">
+        {% if appeal.status == 'pending' %}
+        <span class="badge badge-amber">⏳ در انتظار بررسی</span>
+        {% elif appeal.status == 'accepted' %}
+        <span class="badge badge-green">✅ پذیرفته شد</span>
+        {% if appeal.new_score is not none %}
+        <span style="font-size:.82rem; color:var(--success);">
+          نمره تغییر کرد: <b>{{ "%.1f"|format(appeal.old_score) }}</b> ← <b>{{ "%.1f"|format(appeal.new_score) }}</b>
+        </span>
+        {% endif %}
+        {% else %}
+        <span class="badge badge-red">✗ رد شد</span>
+        {% endif %}
+        <span style="margin-right:auto; font-size:.75rem; color:var(--text-muted);">
+          {{ appeal.created_at.strftime('%Y/%m/%d %H:%M') if appeal.created_at else '' }}
+        </span>
+      </div>
+      <!-- متن اعتراض -->
+      <div style="padding:12px 16px; background:var(--bg-elevated);">
+        <div style="font-size:.72rem; color:var(--text-muted); margin-bottom:4px;">متن اعتراض شما:</div>
+        <div style="font-size:.88rem; color:var(--text-primary); line-height:1.7; white-space:pre-wrap;">{{
+          appeal.appeal_text }}</div>
+      </div>
+      <!-- پاسخ استاد -->
+      {% if appeal.teacher_reply %}
+      <div style="padding:12px 16px; border-top:1px solid var(--border); background:rgba(139,92,246,.05);">
+        <div style="font-size:.72rem; color:#8b5cf6; font-weight:600; margin-bottom:4px;">💬 پاسخ استاد:</div>
+        <div style="font-size:.88rem; color:var(--text-primary); line-height:1.7; white-space:pre-wrap;">{{
+          appeal.teacher_reply }}</div>
+      </div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- فرم ثبت اعتراض جدید -->
+  {% if not appeal_pending %}
+  <div
+    style="background:var(--bg-elevated); border-radius:var(--radius-sm); padding:20px; border:1px solid var(--border);">
+    <div style="font-size:.85rem; color:var(--text-secondary); margin-bottom:14px; line-height:1.7;">
+      اگر به نمره خود اعتراض دارید، دلیل خود را در زیر بنویسید. استاد پس از بررسی پاسخ خواهد داد.
+    </div>
+    <form method="POST" action="/results/{{ result.id }}/appeal">
+      <div style="margin-bottom:12px;">
+        <textarea name="appeal_text" rows="5" placeholder="متن اعتراض خود را اینجا بنویسید..." style="width:100%; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-sm);
+                 color:var(--text-primary); padding:12px 14px; font-size:.88rem; resize:vertical; font-family:inherit;
+                 line-height:1.7; box-sizing:border-box; outline:none;"
+          onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;">
+        📨 ثبت اعتراض
+      </button>
+    </form>
+  </div>
+  {% else %}
+  <div style="text-align:center; padding:16px; color:var(--text-muted); font-size:.85rem;">
+    پس از پاسخ استاد، امکان ثبت اعتراض جدید وجود خواهد داشت.
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+
+{% endblock %}

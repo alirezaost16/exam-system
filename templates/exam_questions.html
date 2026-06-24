@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+{% block title %}مدیریت سوالات — {{ exam.title }}{% endblock %}
+
+{% block content %}
+<div class="topbar fade-in">
+  <div>
+    <div class="page-title">سوالات آزمون 📝</div>
+    <div class="page-subtitle">{{ exam.title }}</div>
+  </div>
+  <div style="display:flex; gap:10px; flex-wrap:wrap;">
+    <span class="badge badge-cyan">{{ questions|length }} سوال</span>
+    <a href="/exams/{{ exam.id }}/edit" class="btn btn-secondary btn-sm">✏️ ویرایش آزمون</a>
+    <a href="/exams/{{ exam.id }}/results" class="btn btn-secondary btn-sm">📊 نتایج دانشجویان</a>
+    <a href="/dashboard" class="btn btn-secondary btn-sm">← داشبورد</a>
+  </div>
+</div>
+
+{% if exam.is_finalized %}
+<div class="alert alert-success fade-in" style="margin-bottom:20px;">
+  ✅ این آزمون <strong>ثبت نهایی</strong> شده و برای دانشجویان قابل مشاهده است.
+</div>
+{% else %}
+<div class="alert alert-info fade-in" style="margin-bottom:20px;">
+  ⚠️ این آزمون هنوز <strong>ثبت نهایی</strong> نشده. دانشجویان نمی‌توانند آن را ببینند تا زمانی که ثبت نهایی کنید.
+</div>
+{% endif %}
+
+<div class="content-grid">
+  <!-- Add Question Form -->
+  <div>
+    <div class="card fade-in fade-in-1" style="margin-bottom:20px;">
+      <div class="card-header">
+        <div class="card-title">＋ افزودن سوال جدید</div>
+      </div>
+      {% if exam.is_finalized %}
+      <div style="padding:16px; text-align:center; color:var(--text-muted); font-size:.85rem;">
+        آزمون ثبت نهایی شده — افزودن سوال غیرفعال است
+      </div>
+      {% else %}
+      <form method="post" action="/exams/{{ exam.id }}/questions/add" id="add-q-form">
+        <div class="form-group">
+          <label class="form-label">متن سوال</label>
+          <textarea name="question_text" class="form-control" rows="3" placeholder="سوال خود را اینجا بنویسید..." required></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">نوع سوال</label>
+            <select name="question_type" id="q-type" class="form-control" onchange="toggleOptions(this.value)">
+              <option value="multiple_choice">تستی (چهار گزینه‌ای)</option>
+              <option value="descriptive">تشریحی</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">نمره</label>
+            <input type="number" name="points" class="form-control" value="1" min="0.5" max="100" step="0.5" required>
+          </div>
+        </div>
+
+        <!-- Time limit per question -->
+        <div class="form-group">
+          <label class="form-label">⏱ زمان مجاز برای این سوال (ثانیه)</label>
+          <input type="number" name="time_limit" class="form-control" value="0" min="0" max="3600"
+                 placeholder="0 = بدون محدودیت زمانی">
+          <div style="font-size:.75rem; color:var(--text-muted); margin-top:4px;">
+            مقدار 0 یعنی برای این سوال تایمر جداگانه‌ای نمایش داده نمی‌شود
+          </div>
+        </div>
+
+        <!-- Multiple Choice Options -->
+        <div id="mc-options">
+          <div style="background:var(--bg-elevated); border:1px solid var(--border); border-radius:var(--radius-md); padding:16px; margin-bottom:14px;">
+            <div style="font-size:.78rem; font-weight:600; color:var(--text-muted); margin-bottom:12px;">گزینه‌ها</div>
+            {% for opt in ['a','b','c','d'] %}
+            <div class="form-group" style="margin-bottom:10px;">
+              <label class="form-label" style="margin-bottom:5px;">
+                <span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;background:var(--bg-overlay);border-radius:50%;font-size:.7rem;font-weight:700;color:var(--accent);margin-left:6px;">{{ opt.upper() }}</span>
+                گزینه {{ loop.index }}
+              </label>
+              <input type="text" name="option_{{ opt }}" class="form-control" placeholder="متن گزینه {{ opt.upper() }}">
+            </div>
+            {% endfor %}
+          </div>
+          <div class="form-group">
+            <label class="form-label">گزینه صحیح</label>
+            <select name="correct_answer" class="form-control">
+              <option value="a">A — گزینه اول</option>
+              <option value="b">B — گزینه دوم</option>
+              <option value="c">C — گزینه سوم</option>
+              <option value="d">D — گزینه چهارم</option>
+            </select>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-full">＋ افزودن سوال</button>
+      </form>
+      {% endif %}
+    </div>
+
+    <!-- Finalize Button -->
+    {% if not exam.is_finalized and questions %}
+    <div class="card fade-in fade-in-2" style="border-color:rgba(0,229,160,.3); margin-bottom:20px;">
+      <div style="text-align:center; padding:8px 0;">
+        <div style="font-size:.85rem; color:var(--text-secondary); margin-bottom:14px;">
+          ✅ سوالات آماده است. آزمون را ثبت نهایی کنید تا برای دانشجویان فعال شود.
+        </div>
+        <form method="post" action="/exams/{{ exam.id }}/finalize"
+              onsubmit="return confirm('آیا از ثبت نهایی آزمون مطمئن هستید؟ پس از ثبت نهایی، افزودن سوال جدید غیرممکن می‌شود.')">
+          <button type="submit" class="btn btn-primary btn-full" style="background:var(--success); border-color:var(--success);">
+            🚀 ثبت نهایی و انتشار آزمون
+          </button>
+        </form>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Exam Info -->
+    <div class="card fade-in fade-in-3" style="border-color:rgba(0,212,255,.2);">
+      <div style="font-size:.85rem; line-height:1.9;">
+        <div style="font-weight:600; color:var(--accent); margin-bottom:10px;">📋 اطلاعات آزمون</div>
+        <div style="display:flex;justify-content:space-between; color:var(--text-secondary);">
+          <span>شروع:</span>
+          <span style="color:var(--text-primary);">{{ exam.start_time.strftime('%Y/%m/%d %H:%M') }}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between; color:var(--text-secondary);">
+          <span>پایان:</span>
+          <span style="color:var(--text-primary);">{{ exam.end_time.strftime('%Y/%m/%d %H:%M') }}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between; color:var(--text-secondary);">
+          <span>مدت:</span>
+          <span style="color:var(--text-primary);">{{ exam.duration_minutes }} دقیقه</span>
+        </div>
+        <div style="display:flex;justify-content:space-between; color:var(--text-secondary);">
+          <span>تعداد سوال:</span>
+          <span style="color:var(--accent); font-weight:600;">{{ questions|length }}</span>
+        </div>
+        {% if questions %}
+        <div style="display:flex;justify-content:space-between; color:var(--text-secondary);">
+          <span>مجموع نمرات:</span>
+          <span style="color:var(--success); font-weight:600;">{{ questions|map(attribute='points')|sum }}</span>
+        </div>
+        {% endif %}
+        <div style="display:flex;justify-content:space-between; color:var(--text-secondary); margin-top:8px; padding-top:8px; border-top:1px solid var(--border);">
+          <span>وضعیت:</span>
+          {% if exam.is_finalized %}
+            <span class="badge badge-green">✅ منتشر شده</span>
+          {% else %}
+            <span class="badge badge-amber">⏳ پیش‌نویس</span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Questions List -->
+  <div class="fade-in fade-in-2">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">لیست سوالات</div>
+        {% if questions %}
+        <span class="badge badge-green">مجموع: {{ questions|map(attribute='points')|sum }} نمره</span>
+        {% endif %}
+      </div>
+
+      {% if questions %}
+      {% for q in questions %}
+      <div class="question-card" style="margin-bottom:12px;">
+        <div class="question-header">
+          <div class="question-number">{{ loop.index }}</div>
+          <div style="flex:1;">
+            <div class="question-text">{{ q.question_text }}</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px; align-items:center;">
+          <span class="badge {% if q.question_type=='multiple_choice' %}badge-cyan{% else %}badge-violet{% endif %}">
+            {% if q.question_type=='multiple_choice' %}تستی{% else %}تشریحی{% endif %}
+          </span>
+          <span class="badge badge-amber">{{ q.points }} نمره</span>
+          {% if q.time_limit and q.time_limit > 0 %}
+          <span class="badge badge-violet">⏱ {{ q.time_limit }} ثانیه</span>
+          {% endif %}
+          {% if q.question_type=='multiple_choice' and q.correct_answer %}
+          <span class="badge badge-green">✓ جواب: {{ q.correct_answer.upper() }}</span>
+          {% endif %}
+          {% if not exam.is_finalized %}
+          <form method="post" action="/questions/{{ q.id }}/delete" style="margin-right:auto;"
+                onsubmit="return confirm('آیا از حذف این سوال مطمئن هستید؟')">
+            <button type="submit" class="btn btn-sm" style="background:rgba(255,95,109,.1); color:#ff5f6d; border:1px solid rgba(255,95,109,.3); padding:3px 10px; font-size:.75rem;">
+              🗑️ حذف
+            </button>
+          </form>
+          {% endif %}
+        </div>
+        {% if q.options_parsed %}
+        <div style="margin-top:10px; font-size:.78rem; color:var(--text-muted);">
+          {% for k,v in q.options_parsed.items() %}
+          <div style="padding:2px 0; {% if k == q.correct_answer %}color:var(--success); font-weight:600;{% endif %}">
+            {{ k.upper() }}) {{ v }} {% if k == q.correct_answer %}✓{% endif %}
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+      {% else %}
+      <div class="empty-state">
+        <div class="empty-icon">📝</div>
+        <div class="empty-title">هنوز سوالی اضافه نشده</div>
+        <div class="empty-desc">از فرم سمت راست سوال اضافه کنید</div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% block extra_js %}
+<script>
+function toggleOptions(type) {
+  const mc = document.getElementById('mc-options');
+  mc.style.display = type === 'multiple_choice' ? 'block' : 'none';
+  const ca = document.querySelector('[name=correct_answer]');
+  if (ca) ca.required = type === 'multiple_choice';
+}
+</script>
+{% endblock %}
+{% endblock %}

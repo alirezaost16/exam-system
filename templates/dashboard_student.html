@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}داشبورد دانشجو{% endblock %}
+
+{% block content %}
+<div class="topbar fade-in">
+  <div>
+    <div class="page-title">سلام، {{ user.full_name }} 👋</div>
+    <div class="page-subtitle">{{ active_exams|length }} آزمون فعال در انتظار شماست</div>
+  </div>
+  <a href="/transcript" class="btn btn-secondary">📊 کارنامه کامل</a>
+</div>
+
+<!-- Stats -->
+<div class="stats-grid fade-in fade-in-1">
+  <div class="stat-card cyan">
+    <div class="stat-icon">📝</div>
+    <div class="stat-value">{{ active_exams|length }}</div>
+    <div class="stat-label">آزمون فعال</div>
+  </div>
+  <div class="stat-card green">
+    <div class="stat-icon">✅</div>
+    <div class="stat-value">{{ my_results|length }}</div>
+    <div class="stat-label">آزمون تحویل داده</div>
+  </div>
+  <div class="stat-card amber">
+    <div class="stat-icon">⭐</div>
+    <div class="stat-value">
+      {% if my_results %}
+        {{ "%.1f"|format(my_results|map(attribute='score')|sum / my_results|length) }}
+      {% else %}—{% endif %}
+    </div>
+    <div class="stat-label">میانگین نمره</div>
+  </div>
+</div>
+
+<!-- Active Exams -->
+<div class="card fade-in fade-in-2" style="margin-bottom:20px;">
+  <div class="card-header">
+    <div class="card-title">📋 آزمون‌های فعال</div>
+    <span class="badge badge-cyan">{{ active_exams|length }} آزمون</span>
+  </div>
+
+  {% if active_exams %}
+  <div class="exam-grid">
+    {% for exam in active_exams %}
+    <div class="exam-card">
+      <div class="exam-card-title">{{ exam.title }}</div>
+      <div class="exam-card-desc">{{ exam.description or 'بدون توضیحات' }}</div>
+      <div class="exam-meta">
+        <div class="exam-meta-item">⏱ {{ exam.duration_minutes }} دقیقه</div>
+        <div class="exam-meta-item">🟢 شروع: {{ exam.start_time.strftime('%Y/%m/%d %H:%M') }}</div>
+        <div class="exam-meta-item">🔴 پایان: {{ exam.end_time.strftime('%Y/%m/%d %H:%M') }}</div>
+      </div>
+      {% if exam.id in inprogress_exam_ids %}
+      <a href="/exams/{{ exam.id }}/take" class="btn btn-full btn-sm"
+         style="background:rgba(255,179,71,.15); color:#ffb347; border:1px solid rgba(255,179,71,.35); margin-top:10px;">
+        ⏳ ادامه آزمون ←
+      </a>
+      {% else %}
+      <a href="/exams/{{ exam.id }}/take" class="btn btn-primary btn-full btn-sm" style="margin-top:10px;">
+        🚀 شروع آزمون ←
+      </a>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-icon">📭</div>
+    <div class="empty-title">آزمون فعالی وجود ندارد</div>
+    <div class="empty-desc">در حال حاضر هیچ آزمونی برگزار نمی‌شود</div>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Recent Results — only submitted ones -->
+<div class="card fade-in fade-in-3">
+  <div class="card-header">
+    <div class="card-title">📊 نتایج اخیر</div>
+    <a href="/transcript" class="btn btn-ghost btn-sm">مشاهده همه</a>
+  </div>
+
+  {% if my_results %}
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>آزمون</th>
+          <th>نمره</th>
+          <th>تاریخ ارسال</th>
+          <th>عملیات</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in my_results[-5:] %}
+        <tr>
+          <td>{{ r.exam.title if r.exam else '—' }}</td>
+          <td>
+            <span class="badge {% if r.score >= 10 %}badge-green{% elif r.score >= 7 %}badge-amber{% else %}badge-red{% endif %}">
+              {{ "%.1f"|format(r.score) }}
+            </span>
+          </td>
+          <td style="color:var(--text-muted); font-size:.82rem;">
+            {{ r.submitted_at.strftime('%Y/%m/%d %H:%M') if r.submitted_at else '—' }}
+          </td>
+          <td>
+            <a href="/results/{{ r.id }}" class="btn btn-ghost btn-sm">مشاهده</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-icon">📋</div>
+    <div class="empty-title">هنوز در هیچ آزمونی شرکت نکرده‌اید</div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

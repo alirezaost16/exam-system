@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <script>
+    (function(){var t=localStorage.getItem('exam_theme');if(t==='light')document.documentElement.setAttribute('data-theme','light');})();
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}سامانه آزمون آنلاین{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/main.css">
+  <link rel="stylesheet" href="/static/css/ultra.css">
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+<div class="app-shell">
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">
+        <div class="logo-icon">📋</div>
+        <div>
+          <div class="logo-text">ExamSystem</div>
+          <div class="logo-sub">سامانه آزمون آنلاین</div>
+        </div>
+      </div>
+    </div>
+
+    <nav style="flex:1; overflow-y:auto;">
+      <div class="nav-section">
+        <div class="nav-label">منو اصلی</div>
+        <a class="nav-item {% if request.url.path == '/dashboard' %}active{% endif %}" href="/dashboard">
+          <span class="nav-icon">⊞</span> داشبورد
+        </a>
+
+        {% if user.role == 'student' %}
+        <a class="nav-item {% if 'take' in request.url.path %}active{% endif %}" href="/dashboard">
+          <span class="nav-icon">📝</span> آزمون‌های فعال
+        </a>
+        <a class="nav-item {% if request.url.path == '/transcript' %}active{% endif %}" href="/transcript">
+          <span class="nav-icon">📊</span> کارنامه من
+        </a>
+        {% endif %}
+
+        {% if user.role in ['teacher', 'admin'] %}
+        <a class="nav-item {% if 'create' in request.url.path %}active{% endif %}" href="/exams/create">
+          <span class="nav-icon">＋</span> ایجاد آزمون
+        </a>
+        {% endif %}
+
+        {% if user.role == 'teacher' %}
+        <a class="nav-item {% if request.url.path == '/appeals' %}active{% endif %}" href="/appeals">
+          <span class="nav-icon">📨</span> اعتراضات
+          {% if pending_appeals_count is defined and pending_appeals_count > 0 %}
+          <span class="badge badge-amber" style="margin-right:auto; font-size:.68rem;">{{ pending_appeals_count }}</span>
+          {% endif %}
+        </a>
+        {% endif %}
+
+        {% if user.role == 'admin' %}
+        <div class="nav-label" style="margin-top:12px;">مدیریت</div>
+        <a class="nav-item" href="/dashboard">
+          <span class="nav-icon">👥</span> مدیریت کاربران
+        </a>
+        <a class="nav-item" href="/dashboard">
+          <span class="nav-icon">🗂️</span> همه آزمون‌ها
+        </a>
+        {% endif %}
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="user-chip">
+        <div class="user-avatar">{{ user.full_name[0] }}</div>
+        <div class="user-info">
+          <div class="user-name">{{ user.full_name }}</div>
+          <div class="user-role-badge">
+            {% if user.role == 'admin' %}مدیر سیستم{% elif user.role == 'teacher' %}استاد{% else %}دانشجو{% endif %}
+          </div>
+        </div>
+        <a href="/profile" class="logout-btn" title="ویرایش پروفایل" style="font-size:1rem;">⚙</a>
+        <a href="/logout" class="logout-btn" title="خروج">⏻</a>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main-content">
+    {% block content %}{% endblock %}
+  </main>
+</div>
+<script src="/static/js/main.js"></script>
+<script src="/static/js/ultra.js"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

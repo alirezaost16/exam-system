@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}ایجاد آزمون{% endblock %}
+
+{% block content %}
+<div class="topbar fade-in">
+  <div>
+    <div class="page-title">ایجاد آزمون جدید ✏️</div>
+    <div class="page-subtitle">مشخصات آزمون را وارد کنید</div>
+  </div>
+  <a href="/dashboard" class="btn btn-secondary">← بازگشت</a>
+</div>
+
+<div style="max-width:680px;">
+  <div class="card fade-in fade-in-1">
+    {% if error %}
+    <div class="alert alert-error">⚠ {{ error }}</div>
+    {% endif %}
+
+    <form method="post" action="/exams/create">
+      <div class="form-group">
+        <label class="form-label">عنوان آزمون</label>
+        <input type="text" name="title" class="form-control" placeholder="مثال: آزمون مهندسی نرم‌افزار فصل ۳" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">توضیحات</label>
+        <textarea name="description" class="form-control" rows="3" placeholder="توضیحات اختیاری درباره آزمون..."></textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">زمان شروع</label>
+          <input type="datetime-local" name="start_time" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">زمان پایان</label>
+          <input type="datetime-local" name="end_time" class="form-control" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">مدت آزمون (دقیقه)</label>
+        <input type="number" name="duration_minutes" class="form-control" placeholder="60" min="5" max="300" required>
+        <div class="form-hint">حداکثر زمانی که دانشجو می‌تواند در آزمون بماند</div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div style="display:flex;gap:12px;justify-content:flex-end;">
+        <a href="/dashboard" class="btn btn-secondary">انصراف</a>
+        <button type="submit" class="btn btn-primary">ادامه: افزودن سوالات ←</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Guide -->
+  <div class="card fade-in fade-in-2" style="margin-top:16px; border-color:rgba(0,212,255,.2);">
+    <div style="font-size:.85rem; color:var(--text-secondary); line-height:1.8;">
+      <div style="font-weight:600; color:var(--accent); margin-bottom:10px;">💡 راهنما</div>
+      <div>✦ پس از ذخیره آزمون، به صفحه افزودن سوالات منتقل می‌شوید</div>
+      <div>✦ می‌توانید سوالات تستی (چهار گزینه‌ای) و تشریحی اضافه کنید</div>
+      <div>✦ سوالات تستی به‌صورت خودکار تصحیح می‌شوند</div>
+      <div>✦ زمان پایان آزمون از زمان شروع بیشتر باشد</div>
+    </div>
+  </div>
+</div>
+
+{% block extra_js %}
+<script>
+  // Set default times
+  const now = new Date();
+  const start = new Date(now.getTime() + 5 * 60000);
+  const end   = new Date(now.getTime() + 125 * 60000);
+  const fmt = d => d.toISOString().slice(0,16);
+  document.querySelector('[name=start_time]').value = fmt(start);
+  document.querySelector('[name=end_time]').value   = fmt(end);
+</script>
+{% endblock %}
+{% endblock %}

@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}داشبورد استاد{% endblock %}
+
+{% block content %}
+<div class="topbar fade-in">
+  <div>
+    <div class="page-title">پنل استاد 🎓</div>
+    <div class="page-subtitle">{{ user.full_name }} — مدیریت آزمون‌ها</div>
+  </div>
+  <a href="/exams/create" class="btn btn-primary">＋ آزمون جدید</a>
+</div>
+
+{% if request.query_params.get('appeal_reviewed') %}
+<div class="alert alert-success fade-in" style="margin-bottom:16px;">✅ پاسخ شما به اعتراض با موفقیت ثبت شد.</div>
+{% endif %}
+
+<div class="stats-grid fade-in fade-in-1">
+  <div class="stat-card cyan">
+    <div class="stat-icon">📋</div>
+    <div class="stat-value">{{ my_exams|length }}</div>
+    <div class="stat-label">کل آزمون‌ها</div>
+  </div>
+  <div class="stat-card green">
+    <div class="stat-icon">✅</div>
+    <div class="stat-value">{{ my_exams|selectattr('is_finalized')|list|length }}</div>
+    <div class="stat-label">منتشر شده</div>
+  </div>
+  <div class="stat-card violet">
+    <div class="stat-icon">📝</div>
+    <div class="stat-value">{{ my_exams|rejectattr('is_finalized')|list|length }}</div>
+    <div class="stat-label">پیش‌نویس</div>
+  </div>
+  <div class="stat-card amber">
+    <div class="stat-icon">👥</div>
+    <div class="stat-value">
+      {% set total = namespace(n=0) %}
+      {% for e in my_exams %}{% set total.n = total.n + e.results|length %}{% endfor %}
+      {{ total.n }}
+    </div>
+    <div class="stat-label">شرکت‌کنندگان</div>
+  </div>
+</div>
+
+<div class="card fade-in fade-in-2">
+  <div class="card-header">
+    <div class="card-title">📋 آزمون‌های من</div>
+    <a href="/exams/create" class="btn btn-primary btn-sm">＋ جدید</a>
+  </div>
+
+  {% if my_exams %}
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>عنوان آزمون</th>
+          <th>زمان شروع</th>
+          <th>زمان پایان</th>
+          <th>مدت</th>
+          <th>شرکت‌کنندگان</th>
+          <th>وضعیت</th>
+          <th>عملیات</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for exam in my_exams %}
+        <tr>
+          <td style="font-weight:600;">{{ exam.title }}</td>
+          <td style="color:var(--text-muted);font-size:.82rem;">{{ exam.start_time.strftime('%Y/%m/%d %H:%M') }}</td>
+          <td style="color:var(--text-muted);font-size:.82rem;">{{ exam.end_time.strftime('%Y/%m/%d %H:%M') }}</td>
+          <td><span class="badge badge-violet">{{ exam.duration_minutes }} دقیقه</span></td>
+          <td>
+            <a href="/exams/{{ exam.id }}/results" class="badge badge-cyan" style="text-decoration:none; cursor:pointer;">
+              {{ exam.results|length }} نفر
+            </a>
+          </td>
+          <td>
+            {% if exam.is_finalized %}
+              <span class="badge badge-green">🚀 منتشر</span>
+            {% else %}
+              <span class="badge badge-amber">⏳ پیش‌نویس</span>
+            {% endif %}
+          </td>
+          <td>
+            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+              <a href="/exams/{{ exam.id }}/questions" class="btn btn-secondary btn-sm">📝 سوالات</a>
+              <a href="/exams/{{ exam.id }}/edit" class="btn btn-ghost btn-sm">✏️ ویرایش</a>
+              <a href="/exams/{{ exam.id }}/results" class="btn btn-ghost btn-sm">📊 نتایج</a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-icon">📭</div>
+    <div class="empty-title">هنوز آزمونی ایجاد نکرده‌اید</div>
+    <div class="empty-desc">با کلیک روی «آزمون جدید» اولین آزمون خود را بسازید</div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

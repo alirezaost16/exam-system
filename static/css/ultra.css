@@ -1,0 +1,994 @@
+/* ═══════════════════════════════════════════════════════
+   EXAM SYSTEM — ULTRA VISUAL ENHANCEMENT
+   زیبا‌سازی فوق‌العاده با انیمیشن‌های حرفه‌ای
+   ═══════════════════════════════════════════════════════ */
+
+/* ── فونت فارسی بهتر ── */
+@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap');
+
+/* ── متغیرهای اضافه برای افکت‌های خفن ── */
+:root {
+  --glow-primary:   0 0 20px rgba(0, 212, 255, 0.4), 0 0 60px rgba(0, 212, 255, 0.2);
+  --glow-success:   0 0 20px rgba(0, 229, 160, 0.4), 0 0 60px rgba(0, 229, 160, 0.2);
+  --glow-danger:    0 0 20px rgba(255, 95, 109, 0.4), 0 0 60px rgba(255, 95, 109, 0.2);
+  --glow-gold:      0 0 20px rgba(255, 179, 71, 0.4), 0 0 60px rgba(255, 179, 71, 0.2);
+  --particle-color: rgba(0, 212, 255, 0.6);
+  --aurora-1: #00d4ff;
+  --aurora-2: #7b8cff;
+  --aurora-3: #00e5a0;
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+[data-theme="light"] {
+  --glow-primary:  0 0 20px rgba(108,60,225,0.3), 0 0 60px rgba(108,60,225,0.15);
+  --glow-success:  0 0 20px rgba(5,150,105,0.3),  0 0 60px rgba(5,150,105,0.15);
+  --particle-color: rgba(108,60,225,0.5);
+  --aurora-1: #6c3ce1;
+  --aurora-2: #a78bfa;
+  --aurora-3: #059669;
+}
+
+/* ══════════════════════════════════════════════════════
+   ۱. افکت اورورای شگفت‌انگیز روی لاگین
+   ══════════════════════════════════════════════════════ */
+
+.auth-page::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 50% at 20% 20%, rgba(0,212,255,.12) 0%, transparent 50%),
+    radial-gradient(ellipse 60% 40% at 80% 80%, rgba(123,140,255,.10) 0%, transparent 50%),
+    radial-gradient(ellipse 50% 60% at 50% 50%, rgba(0,229,160,.06) 0%, transparent 60%);
+  animation: aurora-shift 8s ease-in-out infinite alternate;
+  pointer-events: none;
+  z-index: 0;
+}
+
+[data-theme="light"] .auth-page::before {
+  background:
+    radial-gradient(ellipse 80% 50% at 20% 20%, rgba(108,60,225,.15) 0%, transparent 50%),
+    radial-gradient(ellipse 60% 40% at 80% 80%, rgba(167,139,250,.12) 0%, transparent 50%),
+    radial-gradient(ellipse 50% 60% at 50% 50%, rgba(5,150,105,.08) 0%, transparent 60%);
+}
+
+@keyframes aurora-shift {
+  0%   { transform: scale(1) translateX(0); opacity: .8; }
+  33%  { transform: scale(1.05) translateX(-3%) translateY(2%); opacity: 1; }
+  66%  { transform: scale(.98) translateX(4%) translateY(-2%); opacity: .9; }
+  100% { transform: scale(1.03) translateX(-2%) translateY(3%); opacity: .85; }
+}
+
+/* ── کارت لاگین با شیشه فوق پیشرفته ── */
+.auth-card {
+  animation: card-entrance .7s var(--ease-spring) both;
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255,255,255,.1);
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.auth-card::after {
+  content: '';
+  position: absolute;
+  top: -100%; right: -50%; left: -50%;
+  height: 200%;
+  background: linear-gradient(180deg, 
+    rgba(255,255,255,.06) 0%, 
+    transparent 50%
+  );
+  transform: rotate(-15deg);
+  pointer-events: none;
+}
+
+@keyframes card-entrance {
+  from { opacity: 0; transform: translateY(40px) scale(.95); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* لوگوی آیکون با پالس */
+.auth-logo-icon {
+  animation: icon-pulse 3s ease-in-out infinite;
+  position: relative;
+}
+
+.auth-logo-icon::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  opacity: 0;
+  animation: ripple-expand 3s ease-out infinite;
+}
+
+.auth-logo-icon::after {
+  content: '';
+  position: absolute;
+  inset: -12px;
+  border-radius: 50%;
+  border: 1.5px solid var(--accent);
+  opacity: 0;
+  animation: ripple-expand 3s ease-out infinite .5s;
+}
+
+@keyframes icon-pulse {
+  0%,100% { transform: scale(1); box-shadow: 0 0 0 0 var(--accent-dim); }
+  50%      { transform: scale(1.04); box-shadow: 0 0 0 8px transparent; }
+}
+
+@keyframes ripple-expand {
+  0%   { transform: scale(1);   opacity: .6; }
+  100% { transform: scale(1.8); opacity: 0;  }
+}
+
+/* ── Input فیلد با افکت focus خفن ── */
+.form-control {
+  position: relative;
+  transition: all .25s var(--ease-smooth) !important;
+}
+
+.form-control:focus {
+  box-shadow: 0 0 0 2px var(--accent-dim), var(--glow-primary) !important;
+  transform: translateY(-1px);
+}
+
+[data-theme="light"] .form-control:focus {
+  box-shadow: 0 0 0 2px rgba(108,60,225,.15), var(--glow-primary) !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   ۲. سایدبار فوق‌العاده
+   ══════════════════════════════════════════════════════ */
+
+.sidebar {
+  transition: box-shadow .3s var(--ease-smooth);
+}
+
+.sidebar::before {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0; left: 0;
+  width: 1px;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    var(--accent) 30%,
+    var(--accent) 70%,
+    transparent 100%
+  );
+  opacity: .3;
+  animation: sidebar-glow-pulse 4s ease-in-out infinite;
+}
+
+[data-theme="light"] .sidebar::before {
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    var(--accent) 30%,
+    var(--accent) 70%,
+    transparent 100%
+  );
+  opacity: .2;
+}
+
+@keyframes sidebar-glow-pulse {
+  0%,100% { opacity: .2; }
+  50%      { opacity: .5; }
+}
+
+/* ── آیتم‌های ناو با slide effect ── */
+.nav-item {
+  position: relative;
+  overflow: hidden;
+}
+
+.nav-item::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, var(--accent-dim), transparent);
+  transform: translateX(100%);
+  transition: transform .3s var(--ease-smooth);
+}
+
+.nav-item:hover::before {
+  transform: translateX(0);
+}
+
+.nav-item.active::after {
+  content: '';
+  position: absolute;
+  right: 0; top: 20%; bottom: 20%;
+  width: 3px;
+  background: var(--accent);
+  border-radius: 3px 0 0 3px;
+  box-shadow: var(--glow-primary);
+  animation: active-bar 2s ease-in-out infinite;
+}
+
+@keyframes active-bar {
+  0%,100% { opacity: 1; box-shadow: var(--glow-primary); }
+  50%      { opacity: .7; box-shadow: none; }
+}
+
+/* ── لوگو با چرخش ظریف ── */
+.logo-icon {
+  transition: transform .4s var(--ease-spring);
+}
+
+.logo-mark:hover .logo-icon {
+  transform: rotate(15deg) scale(1.1);
+}
+
+/* ══════════════════════════════════════════════════════
+   ۳. کارت‌ها با hover فوق‌العاده
+   ══════════════════════════════════════════════════════ */
+
+.card {
+  position: relative;
+  transition: transform .3s var(--ease-spring), box-shadow .3s var(--ease-smooth) !important;
+  will-change: transform;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: calc(var(--radius-lg) + 1px);
+  background: linear-gradient(
+    135deg,
+    rgba(0,212,255,.15) 0%,
+    transparent 40%,
+    transparent 60%,
+    rgba(123,140,255,.08) 100%
+  );
+  opacity: 0;
+  transition: opacity .3s var(--ease-smooth);
+  pointer-events: none;
+  z-index: -1;
+}
+
+[data-theme="light"] .card::before {
+  background: linear-gradient(
+    135deg,
+    rgba(108,60,225,.12) 0%,
+    transparent 40%,
+    transparent 60%,
+    rgba(245,158,11,.08) 100%
+  );
+}
+
+.card:hover::before {
+  opacity: 1;
+}
+
+/* ── Stat Cards با افکت ذرات درخشان ── */
+.stat-card {
+  position: relative;
+  overflow: hidden;
+  transition: transform .3s var(--ease-spring), box-shadow .3s var(--ease-smooth) !important;
+  cursor: default;
+}
+
+.stat-card::after {
+  content: '';
+  position: absolute;
+  top: -50%; right: -20%;
+  width: 120%;
+  height: 200%;
+  background: radial-gradient(ellipse at center, rgba(255,255,255,.07) 0%, transparent 60%);
+  transform: rotate(-30deg);
+  pointer-events: none;
+}
+
+.stat-card:hover {
+  transform: translateY(-6px) scale(1.02) !important;
+}
+
+.stat-card.cyan:hover  { box-shadow: 0 12px 40px rgba(0,212,255,.25) !important; }
+.stat-card.green:hover { box-shadow: 0 12px 40px rgba(0,229,160,.25) !important; }
+.stat-card.amber:hover { box-shadow: 0 12px 40px rgba(255,179,71,.25) !important; }
+.stat-card.violet:hover{ box-shadow: 0 12px 40px rgba(168,85,247,.25) !important; }
+
+/* ── شمارنده متحرک برای stat-value ── */
+.stat-value {
+  display: inline-block;
+  transition: transform .3s var(--ease-spring);
+}
+
+.stat-card:hover .stat-value {
+  transform: scale(1.1);
+}
+
+.stat-icon {
+  font-size: 1.8rem !important;
+  display: inline-block;
+  transition: transform .4s var(--ease-spring);
+}
+
+.stat-card:hover .stat-icon {
+  transform: rotate(-10deg) scale(1.2);
+  animation: wiggle .4s var(--ease-spring);
+}
+
+@keyframes wiggle {
+  0%  { transform: rotate(0deg) scale(1); }
+  25% { transform: rotate(-15deg) scale(1.2); }
+  75% { transform: rotate(10deg) scale(1.15); }
+  100%{ transform: rotate(-5deg) scale(1.1); }
+}
+
+/* ══════════════════════════════════════════════════════
+   ۴. دکمه‌های انیمیشنی
+   ══════════════════════════════════════════════════════ */
+
+.btn-primary {
+  position: relative;
+  overflow: hidden;
+  transition: all .25s var(--ease-smooth) !important;
+}
+
+.btn-primary::before {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 0; height: 0;
+  background: rgba(255,255,255,.2);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width .4s var(--ease-smooth), height .4s var(--ease-smooth), opacity .4s;
+  opacity: 0;
+}
+
+.btn-primary:hover::before {
+  width: 300px;
+  height: 300px;
+  opacity: 1;
+}
+
+.btn-primary:active {
+  transform: scale(.97) !important;
+}
+
+.btn-primary::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.2);
+}
+
+/* ── Ripple effect روی کلیک ── */
+@keyframes ripple {
+  to { transform: scale(4); opacity: 0; }
+}
+
+.ripple-effect {
+  position: absolute;
+  border-radius: 50%;
+  transform: scale(0);
+  animation: ripple .6s linear;
+  background-color: rgba(255, 255, 255, 0.3);
+  pointer-events: none;
+}
+
+/* ══════════════════════════════════════════════════════
+   ۵. صفحه آزمون — عناصر خفن
+   ══════════════════════════════════════════════════════ */
+
+/* ── تایمر با درخشش هوشمند ── */
+.exam-timer-widget {
+  animation: timer-entrance .5s var(--ease-spring) both !important;
+  transition: all .3s var(--ease-smooth) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+}
+
+@keyframes timer-entrance {
+  from { opacity: 0; transform: translateY(-20px) scale(.9); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.timer-value {
+  transition: color .3s var(--ease-smooth), text-shadow .3s var(--ease-smooth);
+}
+
+.timer-warn {
+  text-shadow: var(--glow-gold) !important;
+}
+
+.timer-crit {
+  text-shadow: var(--glow-danger) !important;
+}
+
+/* ── Progress bar با gradient متحرک ── */
+.progress-fill {
+  background: linear-gradient(
+    90deg,
+    var(--accent) 0%,
+    var(--success) 50%,
+    var(--accent) 100%
+  );
+  background-size: 200% 100%;
+  animation: progress-shimmer 2s linear infinite;
+}
+
+@keyframes progress-shimmer {
+  0%   { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+/* ── سوال‌کارت با slide-in ── */
+.q-slide.active {
+  animation: question-slide .35s var(--ease-spring) both !important;
+}
+
+@keyframes question-slide {
+  from { opacity: 0; transform: translateX(-20px) scale(.98); }
+  to   { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+.question-card {
+  position: relative;
+  transition: all .25s var(--ease-smooth) !important;
+  overflow: hidden;
+}
+
+.question-card::before {
+  content: '';
+  position: absolute;
+  top: 0; right: 0; left: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  opacity: 0;
+  transition: opacity .3s;
+}
+
+.question-card:hover::before {
+  opacity: 1;
+}
+
+/* ── گزینه‌های تست با افکت check ── */
+.option-label {
+  transition: all .2s var(--ease-spring) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.option-label:hover {
+  transform: translateX(-3px) !important;
+}
+
+.option-label::after {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 0; height: 0;
+  background: rgba(0,212,255,.1);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width .3s, height .3s, opacity .3s;
+  opacity: 0;
+}
+
+.option-wrap input[type=radio]:checked ~ label {
+  transform: scale(1.01) !important;
+  animation: option-select .3s var(--ease-spring);
+}
+
+@keyframes option-select {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.03); }
+  100% { transform: scale(1.01); }
+}
+
+/* ── تایمر سوال با gradient رنگی ── */
+.q-timer-fill {
+  background: linear-gradient(90deg, var(--success), var(--accent));
+  box-shadow: 0 0 8px var(--accent);
+  transition: width .8s linear, background .5s, box-shadow .5s !important;
+}
+
+.q-timer-label.warn .q-timer-fill,
+.q-timer-fill.warn {
+  background: linear-gradient(90deg, var(--warning), #ff9f43);
+  box-shadow: 0 0 8px var(--warning);
+}
+
+.q-timer-label.crit .q-timer-fill,
+.q-timer-fill.crit {
+  background: linear-gradient(90deg, var(--danger), #ff7675);
+  box-shadow: 0 0 8px var(--danger);
+  animation: crit-pulse .5s ease-in-out infinite;
+}
+
+@keyframes crit-pulse {
+  0%,100% { opacity: 1; }
+  50%      { opacity: .7; }
+}
+
+/* ══════════════════════════════════════════════════════
+   ۶. صفحه نتیجه — جلوه‌های حماسی
+   ══════════════════════════════════════════════════════ */
+
+/* ── Score Ring با انیمیشن درخشان ── */
+#score-circle {
+  transition: stroke-dashoffset 1.4s var(--ease-spring) !important;
+}
+
+.score-ring {
+  position: relative;
+}
+
+.score-ring::before {
+  content: '';
+  position: absolute;
+  inset: -14px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--accent-dim) 0%, transparent 70%);
+  animation: ring-pulse 3s ease-in-out infinite;
+  z-index: -1;
+}
+
+.score-ring--high::before { background: radial-gradient(circle, rgba(0,229,160,.22) 0%, transparent 70%); }
+.score-ring--mid::before  { background: radial-gradient(circle, rgba(255,179,71,.22) 0%, transparent 70%); }
+.score-ring--low::before  { background: radial-gradient(circle, rgba(255,95,109,.22) 0%, transparent 70%); }
+
+@keyframes ring-pulse {
+  0%,100% { transform: scale(1);    opacity: .5; }
+  50%      { transform: scale(1.08); opacity: 1; }
+}
+
+.score-ring-ticks {
+  opacity: 0;
+  animation: ticks-fade-in .6s ease .9s forwards;
+}
+@keyframes ticks-fade-in {
+  to { opacity: 1; }
+}
+
+.score-big {
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-size: 2.9rem !important;
+  font-weight: 800 !important;
+  animation: score-count-in .8s var(--ease-spring) .15s both;
+}
+
+.score-ring--high .score-big { background-image: linear-gradient(135deg, var(--success), #00c2ff); }
+.score-ring--mid  .score-big { background-image: linear-gradient(135deg, var(--warning), #ff8a3d); }
+.score-ring--low  .score-big { background-image: linear-gradient(135deg, var(--danger), #ff8a8a); }
+
+@keyframes score-count-in {
+  from { transform: scale(.5); opacity: 0; }
+  to   { transform: scale(1);  opacity: 1; }
+}
+
+.score-pct-badge {
+  opacity: 0;
+  animation: badge-pop-in .5s var(--ease-spring) 1.05s forwards;
+}
+@keyframes badge-pop-in {
+  from { opacity: 0; transform: translateY(4px) scale(.85); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.score-headline {
+  opacity: 0;
+  animation: fadeInUp .5s var(--ease-smooth) 1.15s forwards;
+}
+
+.score-subline {
+  opacity: 0;
+  animation: fadeInUp .5s var(--ease-smooth) 1.3s forwards;
+}
+
+.score-subline-fill {
+  --fill-target: 100%;
+  width: 0;
+  animation: subline-grow 1.3s var(--ease-spring) 1.35s forwards;
+}
+@keyframes subline-grow {
+  from { width: 0; }
+  to   { width: var(--fill-target); }
+}
+
+
+/* ── ذرات شادی برای نمره بالا ── */
+.confetti-container {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  overflow: hidden;
+}
+
+.confetti-piece {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  animation: confetti-fall linear both;
+}
+
+@keyframes confetti-fall {
+  0%   { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
+
+/* ── کارت‌های correct/wrong با انیمیشن ── */
+.answer-correct {
+  animation: correct-flash .4s var(--ease-spring);
+}
+
+.answer-wrong {
+  animation: wrong-shake .4s var(--ease-spring);
+}
+
+@keyframes correct-flash {
+  0%   { background: rgba(0,229,160,.3); transform: scale(.98); }
+  50%  { background: rgba(0,229,160,.15); transform: scale(1.01); }
+  100% { background: rgba(0,229,160,.05); transform: scale(1); }
+}
+
+@keyframes wrong-shake {
+  0%,100% { transform: translateX(0); }
+  20%     { transform: translateX(-8px); }
+  40%     { transform: translateX(6px); }
+  60%     { transform: translateX(-4px); }
+  80%     { transform: translateX(3px); }
+}
+
+/* ══════════════════════════════════════════════════════
+   ۷. Toast و notification های فوق‌العاده
+   ══════════════════════════════════════════════════════ */
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px) scale(.9); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ══════════════════════════════════════════════════════
+   ۸. صفحه Index/Landing با پارالاکس
+   ══════════════════════════════════════════════════════ */
+
+.hero-glow {
+  animation: hero-glow-anim 6s ease-in-out infinite alternate !important;
+}
+
+@keyframes hero-glow-anim {
+  0%   { transform: scale(1) translateY(0); opacity: .6; }
+  50%  { transform: scale(1.1) translateY(-20px); opacity: 1; }
+  100% { transform: scale(.95) translateY(10px); opacity: .7; }
+}
+
+.hero-badge::before {
+  animation: badge-blink 1.5s ease-in-out infinite !important;
+}
+
+@keyframes badge-blink {
+  0%,100% { opacity: 1; color: var(--accent); }
+  50%      { opacity: .4; }
+}
+
+.hero h1 {
+  animation: title-entrance .8s var(--ease-spring) .2s both;
+}
+
+.hero p {
+  animation: title-entrance .8s var(--ease-spring) .4s both;
+}
+
+.hero-cta {
+  animation: title-entrance .8s var(--ease-spring) .6s both;
+}
+
+@keyframes title-entrance {
+  from { opacity: 0; transform: translateY(30px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.feature-card {
+  transition: all .3s var(--ease-spring) !important;
+  cursor: default;
+}
+
+.feature-card:hover {
+  transform: translateY(-8px) scale(1.02) !important;
+  border-color: var(--accent) !important;
+  box-shadow: 0 16px 40px rgba(0,212,255,.15), 0 0 0 1px rgba(0,212,255,.2) !important;
+}
+
+[data-theme="light"] .feature-card:hover {
+  border-color: var(--accent) !important;
+  box-shadow: 0 16px 40px rgba(108,60,225,.15), 0 0 0 1px rgba(108,60,225,.2) !important;
+}
+
+.feature-card:hover .feature-icon {
+  display: inline-block;
+  animation: feature-bounce .5s var(--ease-spring);
+}
+
+@keyframes feature-bounce {
+  0%   { transform: scale(1) translateY(0); }
+  40%  { transform: scale(1.3) translateY(-8px); }
+  60%  { transform: scale(.95) translateY(2px); }
+  100% { transform: scale(1) translateY(0); }
+}
+
+/* ── Grid background با تکان ظریف ── */
+.grid-bg {
+  animation: grid-drift 20s linear infinite;
+}
+
+@keyframes grid-drift {
+  from { background-position: 0 0; }
+  to   { background-position: 48px 48px; }
+}
+
+/* ══════════════════════════════════════════════════════
+   ۹. Table row hover با slide effect
+   ══════════════════════════════════════════════════════ */
+
+tbody tr {
+  transition: all .2s var(--ease-smooth) !important;
+  position: relative;
+}
+
+tbody tr:hover {
+  transform: translateX(-3px);
+}
+
+tbody tr:hover td:first-child {
+  color: var(--accent) !important;
+  font-weight: 500;
+}
+
+/* ══════════════════════════════════════════════════════
+   ۱۰. Badge‌های انیمیشنی
+   ══════════════════════════════════════════════════════ */
+
+.badge {
+  transition: transform .2s var(--ease-spring);
+}
+
+.badge:hover {
+  transform: scale(1.08);
+}
+
+.badge-cyan { box-shadow: 0 2px 8px rgba(0,212,255,.2); }
+.badge-green{ box-shadow: 0 2px 8px rgba(0,229,160,.2); }
+.badge-amber{ box-shadow: 0 2px 8px rgba(255,179,71,.2); }
+.badge-red  { box-shadow: 0 2px 8px rgba(255,95,109,.2); }
+
+/* ══════════════════════════════════════════════════════
+   ۱۱. Theme Toggle با افکت ویژه
+   ══════════════════════════════════════════════════════ */
+
+.theme-toggle {
+  transition: all .3s var(--ease-spring) !important;
+  overflow: hidden;
+}
+
+.theme-toggle:hover {
+  transform: scale(1.1) rotate(15deg) !important;
+  box-shadow: var(--glow-primary) !important;
+}
+
+.theme-toggle:active {
+  transform: scale(.9) rotate(-15deg) !important;
+}
+
+/* ── Spinning sun/moon ── */
+.theme-toggle .icon-dark,
+.theme-toggle .icon-light {
+  display: inline-block;
+  transition: transform .4s var(--ease-spring);
+}
+
+.theme-toggle:hover .icon-dark,
+.theme-toggle:hover .icon-light {
+  animation: icon-spin .6s var(--ease-spring);
+}
+
+@keyframes icon-spin {
+  from { transform: rotate(0deg) scale(1); }
+  to   { transform: rotate(360deg) scale(1); }
+}
+
+/* ══════════════════════════════════════════════════════
+   ۱۲. صفحه داشبورد — exam-card با افکت
+   ══════════════════════════════════════════════════════ */
+
+.exam-card {
+  position: relative;
+  transition: all .3s var(--ease-spring) !important;
+  overflow: hidden;
+}
+
+.exam-card::before {
+  content: '';
+  position: absolute;
+  top: 0; right: 0; bottom: 0;
+  width: 3px;
+  background: linear-gradient(180deg, var(--accent), var(--success));
+  border-radius: 0 3px 3px 0;
+  transform: scaleY(0);
+  transform-origin: top;
+  transition: transform .3s var(--ease-smooth);
+}
+
+.exam-card:hover::before {
+  transform: scaleY(1);
+}
+
+.exam-card:hover {
+  transform: translateY(-4px) !important;
+  box-shadow: 0 12px 32px rgba(0,212,255,.12) !important;
+}
+
+.exam-card .btn-primary {
+  background: linear-gradient(135deg, var(--accent), var(--info)) !important;
+  box-shadow: 0 4px 16px rgba(0,212,255,.3) !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   ۱۳. User Avatar با افکت جالب
+   ══════════════════════════════════════════════════════ */
+
+.user-avatar {
+  transition: transform .3s var(--ease-spring), box-shadow .3s !important;
+  position: relative;
+}
+
+.user-avatar:hover {
+  transform: scale(1.15) !important;
+  box-shadow: 0 0 0 3px var(--accent), var(--glow-primary) !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   ۱۴. اسکرول با fade-in
+   ══════════════════════════════════════════════════════ */
+
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(30px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slide-in-left {
+  from { opacity: 0; transform: translateX(-30px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.animate-from-right { animation: slide-in-right .5s var(--ease-spring) both; }
+.animate-from-left  { animation: slide-in-left  .5s var(--ease-spring) both; }
+
+/* ══════════════════════════════════════════════════════
+   ۱۵. پالس زنده بودن سیستم
+   ══════════════════════════════════════════════════════ */
+
+@keyframes live-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(0,229,160,.4); }
+  70%  { box-shadow: 0 0 0 8px rgba(0,229,160,0); }
+  100% { box-shadow: 0 0 0 0 rgba(0,229,160,0); }
+}
+
+.live-indicator {
+  display: inline-block;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--success);
+  animation: live-pulse 2s ease-in-out infinite;
+}
+
+/* ══════════════════════════════════════════════════════
+   ۱۶. Page Transitions کلی
+   ══════════════════════════════════════════════════════ */
+
+.main-content > * {
+  animation: page-content-in .4s var(--ease-smooth) both;
+}
+
+@keyframes page-content-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── topbar انیمیشن ── */
+.topbar {
+  animation: topbar-in .5s var(--ease-spring) both !important;
+}
+
+@keyframes topbar-in {
+  from { opacity: 0; transform: translateY(-20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ══════════════════════════════════════════════════════
+   ۱۷. Upload Area با drag state
+   ══════════════════════════════════════════════════════ */
+
+.file-upload-area {
+  transition: all .3s var(--ease-spring) !important;
+}
+
+.file-upload-area:hover {
+  transform: scale(1.01);
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 20px var(--accent-dim), inset 0 0 20px var(--accent-dim) !important;
+}
+
+.file-upload-area.dragover {
+  transform: scale(1.02) !important;
+  animation: upload-pulse .5s ease-in-out infinite alternate;
+}
+
+@keyframes upload-pulse {
+  from { box-shadow: 0 0 20px var(--accent-dim); }
+  to   { box-shadow: 0 0 40px rgba(0,212,255,.3); }
+}
+
+/* ══════════════════════════════════════════════════════
+   ۱۸. Scrollbar استایل خفن
+   ══════════════════════════════════════════════════════ */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--accent), var(--info));
+  border-radius: 3px;
+  transition: background .3s;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, var(--accent-hover), var(--accent));
+}
+
+/* ══════════════════════════════════════════════════════
+   ۱۹. Reduced Motion Support
+   ══════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
+
+/* ══════════════════════════════════════════════════════
+   ۲۰. لود اسکرین و skeleton
+   ══════════════════════════════════════════════════════ */
+
+@keyframes skeleton-shimmer {
+  from { background-position: -468px 0; }
+  to   { background-position: 468px 0; }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--bg-elevated) 0px,
+    var(--bg-overlay) 40px,
+    var(--bg-elevated) 80px
+  );
+  background-size: 600px auto;
+  animation: skeleton-shimmer 1.5s linear infinite;
+  border-radius: var(--radius-sm);
+}

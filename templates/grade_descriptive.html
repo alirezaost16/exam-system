@@ -1,0 +1,349 @@
+{% extends "base.html" %}
+{% block title %}تصحیح تشریحی — {{ student.full_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  .grade-hero {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px 28px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .grade-avatar {
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), #8b5cf6);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem; font-weight: 700; color: #000; flex-shrink: 0;
+  }
+  .mc-score-box {
+    background: var(--bg-base);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 18px;
+    text-align: center;
+    min-width: 120px;
+  }
+  .mc-score-box .val { font-size: 1.5rem; font-weight: 700; color: var(--accent); }
+  .mc-score-box .lbl { font-size: .72rem; color: var(--text-muted); margin-top: 2px; }
+
+  .desc-card {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+  .desc-card-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: flex-start; gap: 12px;
+  }
+  .desc-card-body { padding: 18px 20px; }
+  .student-answer-box {
+    background: var(--bg-base);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    font-size: .88rem;
+    line-height: 1.8;
+    color: var(--text-primary);
+    white-space: pre-wrap;
+    min-height: 70px;
+  }
+  .student-answer-box.empty { color: var(--text-muted); font-style: italic; }
+  .score-input-row {
+    display: flex; align-items: center; gap: 12px;
+    margin-top: 14px; flex-wrap: wrap;
+  }
+  .score-input-wrap {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--bg-base);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0 14px;
+    transition: border-color .2s;
+  }
+  .score-input-wrap:focus-within { border-color: var(--accent); }
+  .score-input-wrap input {
+    background: transparent; border: none; outline: none;
+    color: var(--text-primary); font-size: 1.1rem; font-weight: 700;
+    font-family: inherit; width: 70px; padding: 10px 0; text-align: center;
+  }
+  .score-input-wrap span { color: var(--text-muted); font-size: .82rem; }
+  .mc-answer-row {
+    display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 10px;
+  }
+  .comment-box {
+    width: 100%; background: var(--bg-base);
+    border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+    color: var(--text-primary); font-family: inherit; font-size: .9rem;
+    padding: 12px 14px; resize: vertical; min-height: 80px;
+    transition: border-color .2s;
+  }
+  .comment-box:focus { outline: none; border-color: var(--accent); }
+  .file-attachment-list {
+    margin-top: 12px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .file-attachment-item {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--bg-base);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: .83rem;
+  }
+  .file-attachment-item:hover { border-color: var(--accent); }
+  .file-attach-icon { font-size: 1.2rem; flex-shrink: 0; }
+  .file-attach-name { flex: 1; color: var(--text-primary); font-weight: 500; }
+  .file-attach-size { color: var(--text-muted); font-size: .75rem; flex-shrink: 0; }
+  .btn-open-file {
+    padding: 5px 14px; border-radius: 7px;
+    background: var(--accent-dim); color: var(--accent);
+    border: 1px solid var(--accent); font-size: .78rem;
+    font-weight: 700; text-decoration: none; font-family: inherit;
+    transition: all .15s; white-space: nowrap; flex-shrink: 0;
+  }
+  .btn-open-file:hover { background: var(--accent); color: #000; }
+  .no-files-note {
+    font-size: .8rem; color: var(--text-muted);
+    font-style: italic; padding: 6px 0;
+  }
+    position: sticky; bottom: 0;
+    background: rgba(10,10,15,.96);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid var(--border);
+    padding: 14px 28px;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    z-index: 50; margin-top: 32px;
+    border-radius: 0 0 var(--radius) var(--radius);
+  }
+  .live-total { font-size: 1rem; font-weight: 700; color: var(--accent); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="topbar fade-in">
+  <div>
+    <div class="page-title">✏️ تصحیح سوالات تشریحی</div>
+    <div class="page-subtitle">{{ exam.title }}</div>
+  </div>
+  <div style="display:flex; gap:10px;">
+    <a href="/exams/{{ exam.id }}/results" class="btn btn-secondary">← بازگشت به نتایج</a>
+  </div>
+</div>
+
+<!-- Student info + MC score -->
+<div class="grade-hero fade-in">
+  <div class="grade-avatar">{{ student.full_name[0] if student else '?' }}</div>
+  <div style="flex:1;">
+    <div style="font-weight:700; font-size:1rem;">{{ student.full_name if student else 'نامشخص' }}</div>
+    <div style="font-size:.8rem; color:var(--text-muted);">{{ student.username if student }}</div>
+    {% if result.submitted_at %}
+    <div style="font-size:.75rem; color:var(--text-muted); margin-top:4px;">
+      ارسال شده: {{ result.submitted_at.strftime('%Y/%m/%d — %H:%M') }}
+    </div>
+    {% endif %}
+  </div>
+  <div class="mc-score-box">
+    <div class="val">{{ "%.1f"|format(mc_score) }}</div>
+    <div class="lbl">نمره تستی (خودکار)</div>
+  </div>
+  <div class="mc-score-box" style="border-color: rgba(139,92,246,.4);">
+    <div class="val" id="live-desc-total" style="color:#8b5cf6;">
+      {{ "%.1f"|format(result.descriptive_score or 0) }}
+    </div>
+    <div class="lbl">نمره تشریحی (استاد)</div>
+  </div>
+  <div class="mc-score-box" style="border-color: var(--accent-dim);">
+    <div class="val" id="live-grand-total">{{ "%.1f"|format(result.score) }}</div>
+    <div class="lbl">نمره کل / {{ total_points }}</div>
+  </div>
+  {% if result.descriptive_graded %}
+  <span class="badge badge-green" style="align-self:flex-start;">✅ تصحیح شده</span>
+  {% else %}
+  <span class="badge badge-amber" style="align-self:flex-start;">⏳ در انتظار تصحیح</span>
+  {% endif %}
+</div>
+
+<form method="post" action="/results/{{ result.id }}/grade" id="grade-form">
+
+  {% if not descriptive_questions %}
+  <div class="card fade-in">
+    <div class="empty-state">
+      <div class="empty-icon">📋</div>
+      <div class="empty-title">سوال تشریحی وجود ندارد</div>
+      <div class="empty-desc">این آزمون فقط شامل سوالات تستی است و به تصحیح دستی نیاز ندارد.</div>
+    </div>
+  </div>
+  {% else %}
+
+  <div class="card fade-in fade-in-1">
+    <div class="card-header">
+      <div class="card-title">📝 سوالات تشریحی ({{ descriptive_questions|length }} سوال)</div>
+    </div>
+
+    {% for q in questions %}
+    {% if q.question_type == 'descriptive' %}
+    <div class="desc-card" data-max="{{ q.points }}" data-qid="{{ q.id }}">
+      <div class="desc-card-header">
+        <div class="question-number" style="flex-shrink:0;">{{ loop.index }}</div>
+        <div style="flex:1;">
+          <div class="question-text">{{ q.question_text }}</div>
+          <div style="margin-top:6px; display:flex; gap:6px; flex-wrap:wrap;">
+            <span class="badge badge-violet">تشریحی</span>
+            <span class="badge badge-amber">حداکثر {{ q.points }} نمره</span>
+          </div>
+        </div>
+      </div>
+      <div class="desc-card-body">
+        <div style="font-size:.75rem; color:var(--text-muted); margin-bottom:6px;">پاسخ دانشجو:</div>
+        {% if q.student_answer and q.student_answer.strip() %}
+        <div class="student-answer-box">{{ q.student_answer }}</div>
+        {% else %}
+        <div class="student-answer-box empty">(دانشجو پاسخی ثبت نکرده است)</div>
+        {% endif %}
+
+        <!-- فایل‌های آپلودی دانشجو -->
+        {% if q.uploaded_files %}
+        <div style="margin-top:14px;">
+          <div style="font-size:.75rem; color:var(--text-muted); margin-bottom:6px; display:flex;align-items:center;gap:5px;">
+            📎 فایل‌های پیوست ({{ q.uploaded_files|length }} فایل)
+          </div>
+          <div class="file-attachment-list">
+            {% for f in q.uploaded_files %}
+            {% set idx = loop.index0 %}
+            <div class="file-attachment-item">
+              <span class="file-attach-icon">{% if 'pdf' in f.mime %}📄{% else %}🖼️{% endif %}</span>
+              <span class="file-attach-name">{{ f.name }}</span>
+              <span class="file-attach-size">
+                {% if f.size < 1048576 %}{{ (f.size / 1024)|round(0)|int }} KB{% else %}{{ (f.size / 1048576)|round(1) }} MB{% endif %}
+              </span>
+              <a href="/submissions/file/{{ result.id }}/{{ q.id }}/{{ idx }}"
+                 target="_blank" class="btn-open-file">
+                {% if 'pdf' in f.mime %}📄 باز کردن{% else %}🖼️ مشاهده{% endif %}
+              </a>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% else %}
+        <div class="no-files-note">📎 فایلی پیوست نشده</div>
+        {% endif %}
+
+        <div class="score-input-row">
+          <label style="font-size:.85rem; color:var(--text-secondary); font-weight:600;">نمره این سوال:</label>
+          <div class="score-input-wrap">
+            <input
+              type="number"
+              name="desc_score_{{ q.id }}"
+              id="score_{{ q.id }}"
+              min="0"
+              max="{{ q.points }}"
+              step="0.25"
+              value="{{ q.given_score if q.given_score != '' else '' }}"
+              placeholder="۰"
+              class="desc-score-input"
+              oninput="recalcTotal()"
+            >
+            <span>از {{ q.points }}</span>
+          </div>
+          {% if q.student_answer and q.student_answer.strip() %}
+          <button type="button" class="btn btn-ghost btn-sm" onclick="setScore('{{ q.id }}', {{ q.points }})">
+            ✅ نمره کامل
+          </button>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="setScore('{{ q.id }}', 0)">
+            ✗ صفر
+          </button>
+          {% else %}
+          <button type="button" class="btn btn-ghost btn-sm" onclick="setScore('{{ q.id }}', 0)" style="color:var(--danger);">
+            ✗ بدون پاسخ — صفر
+          </button>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+    {% endfor %}
+  </div>
+
+  <!-- Teacher comment -->
+  <div class="card fade-in fade-in-2">
+    <div class="card-header">
+      <div class="card-title">💬 نظر کلی استاد (اختیاری)</div>
+    </div>
+    <div style="padding:16px 20px;">
+      <textarea name="teacher_comment" class="comment-box"
+        placeholder="می‌توانید نظر یا بازخورد کلی برای دانشجو بنویسید...">{{ result.teacher_comment or '' }}</textarea>
+    </div>
+  </div>
+
+  <!-- Sticky submit bar -->
+  <div class="sticky-footer fade-in">
+    <div>
+      <div style="font-size:.78rem; color:var(--text-muted);">نمره کل پس از ثبت:</div>
+      <div class="live-total">
+        <span id="footer-total">{{ "%.1f"|format(result.score) }}</span>
+        از {{ total_points }}
+      </div>
+    </div>
+    <div style="display:flex; gap:10px; align-items:center;">
+      <a href="/exams/{{ exam.id }}/results" class="btn btn-ghost">انصراف</a>
+      <button type="submit" class="btn btn-primary">💾 ثبت نمرات تشریحی</button>
+    </div>
+  </div>
+
+  {% endif %}
+</form>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const MC_SCORE = {{ mc_score }};
+  const MAX_POINTS = {{ total_points }};
+
+  function recalcTotal() {
+    let descSum = 0;
+    document.querySelectorAll('.desc-score-input').forEach(inp => {
+      const v = parseFloat(inp.value);
+      if (!isNaN(v)) descSum += v;
+    });
+    const grand = MC_SCORE + descSum;
+    document.getElementById('live-desc-total').textContent = descSum.toFixed(1);
+    document.getElementById('live-grand-total').textContent = grand.toFixed(1);
+    document.getElementById('footer-total').textContent = grand.toFixed(1);
+  }
+
+  function setScore(qid, val) {
+    const inp = document.getElementById('score_' + qid);
+    if (inp) { inp.value = val; recalcTotal(); }
+  }
+
+  // اعتبارسنجی قبل از ارسال
+  document.getElementById('grade-form')?.addEventListener('submit', function(e) {
+    const inputs = document.querySelectorAll('.desc-score-input');
+    let ok = true;
+    inputs.forEach(inp => {
+      if (inp.value.trim() === '') {
+        inp.style.borderColor = '#ff5f6d';
+        ok = false;
+      } else {
+        inp.style.borderColor = '';
+      }
+    });
+    if (!ok) {
+      e.preventDefault();
+      showToast('لطفاً برای همه سوالات تشریحی نمره وارد کنید', 'warning');
+    }
+  });
+
+  recalcTotal();
+</script>
+{% endblock %}

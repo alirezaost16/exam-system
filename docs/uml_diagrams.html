@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>دیاگرام‌های UML — سامانه آزمون آنلاین</title>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:      #08080e;
+  --surface: #101018;
+  --raised:  #18182a;
+  --border:  #252535;
+  --accent:  #00d4ff;
+  --green:   #00e5a0;
+  --amber:   #ffb347;
+  --violet:  #9b7bff;
+  --red:     #ff5f6d;
+  --txt:     #e8e8f2;
+  --muted:   #6060780;
+  --dim:     #404058;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Vazirmatn',sans-serif;
+  background:var(--bg); color:var(--txt);
+  direction:rtl; line-height:1.6;
+}
+
+/* Grid BG */
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:
+    linear-gradient(rgba(0,212,255,.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,212,255,.025) 1px, transparent 1px);
+  background-size:44px 44px;
+  pointer-events:none; z-index:0;
+}
+
+/* Cover */
+.cover{
+  min-height:100vh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  text-align:center;padding:60px 20px;
+  position:relative; z-index:1;
+}
+.cover-glow{
+  position:absolute;width:700px;height:700px;border-radius:50%;
+  background:radial-gradient(circle,rgba(0,212,255,.07) 0%,transparent 65%);
+  pointer-events:none;
+}
+.cover-tag{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.3);
+  color:var(--accent);padding:6px 18px;border-radius:99px;
+  font-size:.78rem;font-weight:600;margin-bottom:28px;
+  animation:pulse 3s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(0,212,255,.3)}50%{box-shadow:0 0 0 8px rgba(0,212,255,0)}}
+.cover h1{font-size:3.2rem;font-weight:700;line-height:1.15;margin-bottom:12px;}
+.cover h1 span{color:var(--accent);}
+.cover p{color:#9090aa;font-size:1rem;max-width:500px;margin-bottom:32px;}
+.toc{
+  display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:20px;
+}
+.toc a{
+  background:var(--raised);border:1px solid var(--border);
+  color:var(--txt);padding:8px 16px;border-radius:8px;
+  font-size:.82rem;text-decoration:none;
+  transition:all .2s ease;
+}
+.toc a:hover{border-color:var(--accent);color:var(--accent);}
+
+/* Section */
+.section{
+  max-width:1060px;margin:0 auto;padding:60px 24px;
+  position:relative;z-index:1;
+}
+.section-header{
+  display:flex;align-items:center;gap:14px;
+  margin-bottom:36px;
+  padding-bottom:20px;
+  border-bottom:1px solid var(--border);
+}
+.section-num{
+  display:flex;align-items:center;justify-content:center;
+  width:40px;height:40px;border-radius:10px;
+  background:rgba(0,212,255,.12);border:1px solid rgba(0,212,255,.25);
+  color:var(--accent);font-weight:700;font-size:.9rem;flex-shrink:0;
+}
+.section-title{font-size:1.5rem;font-weight:700;}
+.section-desc{font-size:.85rem;color:#707090;margin-top:3px;}
+
+/* Diagram box */
+.diagram-box{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:16px;padding:32px;
+  overflow-x:auto;
+}
+
+/* ═══════════ Use Case ═══════════ */
+.uc-canvas{
+  display:grid;grid-template-columns:1fr auto 1fr;
+  gap:0; min-width:600px; align-items:start;
+}
+.uc-actors{display:flex;flex-direction:column;gap:28px;padding:20px 0;}
+.actor{
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  cursor:default;
+}
+.actor-icon{
+  width:48px;height:48px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;border:2px solid;
+}
+.actor.admin  .actor-icon{background:rgba(255,95,109,.1);border-color:rgba(255,95,109,.4);color:var(--red);}
+.actor.teacher.actor-icon,.actor.teacher .actor-icon{background:rgba(0,212,255,.1);border-color:rgba(0,212,255,.4);color:var(--accent);}
+.actor.student .actor-icon{background:rgba(0,229,160,.1);border-color:rgba(0,229,160,.4);color:var(--green);}
+.actor-name{font-size:.75rem;color:#9090aa;font-weight:600;}
+
+.uc-system{
+  background:var(--raised);border:1px solid var(--border);
+  border-radius:12px;padding:24px;min-width:360px;
+}
+.system-label{
+  text-align:center;font-size:.7rem;font-weight:700;
+  color:var(--accent);letter-spacing:.1em;text-transform:uppercase;
+  margin-bottom:20px;
+}
+.use-cases{display:flex;flex-direction:column;gap:8px;}
+.uc-item{
+  background:var(--bg);border:1px solid var(--border);
+  border-radius:8px;padding:9px 14px;
+  font-size:.8rem;text-align:center;color:var(--txt);
+  position:relative;transition:all .2s;
+}
+.uc-item:hover{border-color:var(--accent);color:var(--accent);}
+.uc-item.admin-uc   {border-right:3px solid var(--red);}
+.uc-item.teacher-uc {border-right:3px solid var(--accent);}
+.uc-item.student-uc {border-right:3px solid var(--green);}
+.uc-item.shared-uc  {border-right:3px solid var(--violet);}
+.uc-lines{width:60px;display:flex;flex-direction:column;justify-content:space-around;padding:20px 0;}
+.uc-line{height:1px;background:linear-gradient(90deg,transparent,var(--dim));}
+
+/* ═══════════ Class Diagram ═══════════ */
+.class-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
+  gap:16px;
+}
+.class-box{
+  background:var(--raised);border:1px solid var(--border);
+  border-radius:10px;overflow:hidden;transition:all .2s;
+}
+.class-box:hover{border-color:var(--accent);transform:translateY(-2px);}
+.class-name{
+  padding:10px 14px;font-weight:700;font-size:.85rem;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:8px;
+}
+.class-fields{padding:10px 14px;}
+.field{
+  font-size:.73rem;padding:3px 0;
+  display:flex;align-items:center;gap:6px;
+  color:#9090b0;border-bottom:1px solid rgba(255,255,255,.04);
+}
+.field:last-child{border-bottom:none;}
+.field-vis{color:var(--accent);font-weight:700;width:10px;flex-shrink:0;}
+.field-type{color:var(--amber);font-size:.68rem;}
+.class-methods{
+  padding:10px 14px;border-top:1px solid var(--border);
+  background:rgba(0,0,0,.2);
+}
+.method{font-size:.72rem;color:var(--green);padding:2px 0;}
+
+/* Relations */
+.relations{margin-top:24px;display:flex;flex-wrap:wrap;gap:12px;}
+.relation{
+  display:flex;align-items:center;gap:8px;
+  background:var(--raised);border:1px solid var(--border);
+  border-radius:8px;padding:8px 14px;font-size:.78rem;
+}
+.rel-type{color:var(--accent);font-weight:700;font-size:.7rem;}
+.rel-arrow{color:var(--dim);}
+
+/* ═══════════ Sequence ═══════════ */
+.seq-wrap{overflow-x:auto;padding-bottom:16px;}
+.seq-actors{
+  display:grid;margin-bottom:0;
+  border-bottom:1px solid var(--border);padding-bottom:16px;
+  margin-bottom:0;
+}
+.seq-actor{text-align:center;}
+.seq-actor-box{
+  display:inline-flex;align-items:center;gap:6px;
+  background:var(--raised);border:1px solid var(--border);
+  border-radius:8px;padding:8px 14px;font-size:.78rem;font-weight:600;
+  margin-bottom:4px;
+}
+.seq-messages{margin-top:0;position:relative;}
+.seq-msg{
+  display:grid;align-items:center;
+  padding:8px 0;position:relative;
+}
+.msg-line{
+  height:1px;background:var(--dim);
+  position:relative;margin:4px 0;
+}
+.msg-line::after{
+  content:'▶';position:absolute;
+  top:50%;transform:translateY(-50%);
+  font-size:10px;color:var(--accent);
+}
+.msg-line.rtl::after{right:-2px;}
+.msg-line.ltr::after{left:-2px;content:'◀';}
+.msg-label{
+  font-size:.72rem;color:var(--txt);
+  background:var(--bg);padding:2px 8px;
+  border-radius:4px;border:1px solid var(--border);
+  position:absolute;top:-10px;left:50%;transform:translateX(-50%);
+  white-space:nowrap;
+}
+.seq-box{margin-top:16px;overflow-x:auto;}
+.seq-table{width:100%;border-collapse:collapse;min-width:700px;}
+.seq-table td{
+  padding:6px 8px;border:1px solid var(--border);
+  font-size:.75rem;text-align:center;vertical-align:middle;
+  min-width:100px;
+}
+.seq-table td.lifeline{
+  background:var(--raised);font-weight:600;color:var(--txt);
+}
+.seq-table td.msg-cell{color:var(--accent);}
+.seq-table tr:nth-child(even) td:not(.lifeline){background:rgba(255,255,255,.015);}
+.arrow-right{display:inline-flex;align-items:center;gap:4px;color:var(--green);font-size:.72rem;}
+.arrow-left {display:inline-flex;align-items:center;gap:4px;color:var(--accent);font-size:.72rem;}
+.arrow-dash {color:var(--violet);}
+.loop-box{
+  background:rgba(155,123,255,.06);
+  border:1px dashed rgba(155,123,255,.3);
+  border-radius:6px;padding:8px;margin:4px 0;
+  font-size:.7rem;color:var(--violet);
+}
+.alt-box{
+  background:rgba(255,179,71,.05);
+  border:1px dashed rgba(255,179,71,.3);
+  border-radius:6px;padding:8px;margin:4px 0;
+}
+
+/* ═══════════ Activity ═══════════ */
+.activity-wrap{
+  display:grid;grid-template-columns:1fr 1fr;gap:24px;
+}
+.activity-lane{
+  background:var(--raised);border:1px solid var(--border);
+  border-radius:12px;padding:20px;
+}
+.lane-title{
+  font-size:.72rem;font-weight:700;
+  letter-spacing:.08em;text-transform:uppercase;
+  padding:6px 12px;border-radius:6px;
+  margin-bottom:16px;text-align:center;
+}
+.lane-title.system {background:rgba(0,212,255,.1);color:var(--accent);}
+.lane-title.user   {background:rgba(0,229,160,.1);color:var(--green);}
+.act-flow{display:flex;flex-direction:column;align-items:center;gap:0;}
+.act-node{
+  display:flex;align-items:center;justify-content:center;
+  padding:8px 16px;border-radius:8px;font-size:.75rem;
+  font-weight:500;text-align:center;width:100%;max-width:220px;
+  border:1px solid;
+}
+.act-node.start{
+  width:24px;height:24px;border-radius:50%;padding:0;
+  background:var(--accent);border-color:var(--accent);max-width:24px;
+}
+.act-node.end{
+  width:24px;height:24px;border-radius:50%;padding:0;
+  background:var(--red);border-color:var(--red);max-width:24px;
+}
+.act-node.action{background:var(--bg);border-color:var(--border);color:var(--txt);}
+.act-node.decision{
+  width:80px;height:40px;padding:0;max-width:80px;
+  border-radius:0;transform:rotate(45deg);
+  background:rgba(255,179,71,.1);border-color:rgba(255,179,71,.4);color:transparent;
+  position:relative;
+}
+.act-node.decision::after{
+  content:attr(data-label);
+  position:absolute;transform:rotate(-45deg);
+  color:var(--amber);font-size:.65rem;white-space:nowrap;
+}
+.act-arrow{
+  width:1px;height:20px;background:var(--dim);
+  position:relative;margin:0 auto;
+}
+.act-arrow::after{
+  content:'▼';position:absolute;bottom:-6px;left:50%;
+  transform:translateX(-50%);font-size:8px;color:var(--dim);
+}
+.flow-steps{display:flex;flex-direction:column;gap:4px;width:100%;}
+.flow-step{
+  display:flex;align-items:center;gap:10px;
+  padding:8px 12px;background:var(--bg);
+  border:1px solid var(--border);border-radius:8px;
+  font-size:.78rem;color:var(--txt);
+}
+.flow-step-num{
+  width:22px;height:22px;border-radius:50%;
+  background:rgba(0,212,255,.12);border:1px solid rgba(0,212,255,.25);
+  color:var(--accent);font-size:.65rem;font-weight:700;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.flow-arrow{
+  text-align:center;color:var(--dim);font-size:.7rem;padding:2px 0;
+}
+.decision-row{
+  display:grid;grid-template-columns:1fr auto 1fr;
+  gap:8px;align-items:start;width:100%;margin:4px 0;
+}
+.decision-box{
+  background:rgba(255,179,71,.07);border:1px solid rgba(255,179,71,.25);
+  border-radius:8px;padding:8px 10px;font-size:.72rem;color:var(--amber);
+  text-align:center;
+}
+.decision-mid{
+  display:flex;align-items:center;justify-content:center;
+  width:40px;height:40px;border-radius:6px;
+  background:rgba(255,179,71,.1);border:1px solid rgba(255,179,71,.3);
+  color:var(--amber);font-size:1rem;font-weight:700;flex-shrink:0;
+}
+.yes-branch{
+  background:rgba(0,229,160,.07);border:1px solid rgba(0,229,160,.25);
+  border-radius:8px;padding:6px;font-size:.7rem;color:var(--green);
+}
+.no-branch{
+  background:rgba(255,95,109,.07);border:1px solid rgba(255,95,109,.25);
+  border-radius:8px;padding:6px;font-size:.7rem;color:var(--red);
+}
+
+/* Legend */
+.legend{
+  display:flex;flex-wrap:wrap;gap:12px;margin-top:20px;
+  padding:14px;background:var(--raised);border:1px solid var(--border);
+  border-radius:10px;
+}
+.legend-item{display:flex;align-items:center;gap:7px;font-size:.75rem;color:#9090b0;}
+.legend-dot{width:10px;height:10px;border-radius:50%;}
+
+/* Footer */
+footer{
+  text-align:center;padding:40px 20px;
+  border-top:1px solid var(--border);
+  color:#505060;font-size:.78rem;
+  position:relative;z-index:1;
+}
+footer span{color:var(--accent);}
+</style>
+</head>
+<body>
+
+<!-- ══ COVER ══════════════════════════════════════════════ -->
+<div class="cover">
+  <div class="cover-glow"></div>
+  <div class="cover-tag">📐 مستند مهندسی نرم‌افزار</div>
+  <h1>دیاگرام‌های <span>UML</span></h1>
+  <p>سامانه آزمون آنلاین — طراحی و تحلیل سیستم</p>
+  <nav class="toc">
+    <a href="#usecase">Use Case</a>
+    <a href="#class">Class Diagram</a>
+    <a href="#sequence">Sequence Diagram</a>
+    <a href="#activity">Activity Diagram</a>
+  </nav>
+</div>
+
+<!-- ══ 1. USE CASE ════════════════════════════════════════ -->
+<section class="section" id="usecase">
+  <div class="section-header">
+    <div class="section-num">۱</div>
+    <div>
+      <div class="section-title">Use Case Diagram</div>
+      <div class="section-desc">نمودار کاربرد — تعاملات بازیگران با سیستم</div>
+    </div>
+  </div>
+
+  <div class="diagram-box">
+    <div class="uc-canvas">
+      <!-- Left Actors -->
+      <div class="uc-actors">
+        <div class="actor admin">
+          <div class="actor-icon">👑</div>
+          <div class="actor-name">مدیر سیستم</div>
+        </div>
+        <div class="actor teacher" style="margin-top:60px;">
+          <div class="actor-icon" style="background:rgba(0,212,255,.1);border-color:rgba(0,212,255,.4);color:var(--accent);">🎓</div>
+          <div class="actor-name">استاد</div>
+        </div>
+        <div class="actor student" style="margin-top:100px;">
+          <div class="actor-icon">📚</div>
+          <div class="actor-name">دانشجو</div>
+        </div>
+      </div>
+
+      <!-- System Boundary -->
+      <div style="position:relative;">
+        <div style="
+          border:1.5px dashed rgba(0,212,255,.3);
+          border-radius:20px;padding:20px 16px;
+          background:rgba(0,212,255,.02);
+          min-width:380px;">
+          <div style="text-align:center;font-size:.65rem;font-weight:700;color:var(--accent);letter-spacing:.1em;margin-bottom:16px;">
+            ‹‹ سامانه آزمون آنلاین ››
+          </div>
+          <div class="use-cases">
+            <div class="uc-item admin-uc">🔧 مدیریت کاربران</div>
+            <div class="uc-item admin-uc">🔄 تغییر نقش کاربران</div>
+            <div class="uc-item shared-uc">🔐 ثبت‌نام و ورود</div>
+            <div class="uc-item teacher-uc">📝 ایجاد آزمون</div>
+            <div class="uc-item teacher-uc">❓ تعریف سوالات</div>
+            <div class="uc-item teacher-uc">⏱ تنظیم زمان آزمون</div>
+            <div class="uc-item student-uc">👀 مشاهده آزمون‌های فعال</div>
+            <div class="uc-item student-uc">✍️ شرکت در آزمون</div>
+            <div class="uc-item student-uc">💾 ذخیره خودکار پاسخ</div>
+            <div class="uc-item student-uc">📊 مشاهده نتیجه و کارنامه</div>
+            <div class="uc-item shared-uc">⚙️ ویرایش اطلاعات کاربری</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right space for layout balance -->
+      <div></div>
+    </div>
+
+    <div class="legend" style="margin-top:20px;">
+      <div class="legend-item"><div class="legend-dot" style="background:var(--red);"></div>مدیر سیستم</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--accent);"></div>استاد</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--green);"></div>دانشجو</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--violet);"></div>مشترک</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 2. CLASS DIAGRAM ═══════════════════════════════════ -->
+<section class="section" id="class" style="padding-top:20px;">
+  <div class="section-header">
+    <div class="section-num">۲</div>
+    <div>
+      <div class="section-title">Class Diagram</div>
+      <div class="section-desc">نمودار کلاس — ساختار داده و روابط بین موجودیت‌ها</div>
+    </div>
+  </div>
+
+  <div class="diagram-box">
+    <div class="class-grid">
+
+      <!-- User -->
+      <div class="class-box">
+        <div class="class-name" style="color:var(--accent);">👤 User</div>
+        <div class="class-fields">
+          <div class="field"><span class="field-vis">+</span>id <span class="field-type">int PK</span></div>
+          <div class="field"><span class="field-vis">+</span>username <span class="field-type">str unique</span></div>
+          <div class="field"><span class="field-vis">-</span>password_hash <span class="field-type">str</span></div>
+          <div class="field"><span class="field-vis">+</span>full_name <span class="field-type">str</span></div>
+          <div class="field"><span class="field-vis">+</span>email <span class="field-type">str unique</span></div>
+          <div class="field"><span class="field-vis">+</span>role <span class="field-type">enum</span></div>
+          <div class="field"><span class="field-vis">+</span>created_at <span class="field-type">datetime</span></div>
+        </div>
+        <div class="class-methods">
+          <div class="method">+ login()</div>
+          <div class="method">+ logout()</div>
+          <div class="method">- hash_password()</div>
+        </div>
+      </div>
+
+      <!-- UserSession -->
+      <div class="class-box">
+        <div class="class-name" style="color:var(--violet);">🔑 UserSession</div>
+        <div class="class-fields">
+          <div class="field"><span class="field-vis">+</span>id <span class="field-type">int PK</span></div>
+          <div class="field"><span class="field-vis">+</span>user_id <span class="field-type">int FK</span></div>
+          <div class="field"><span class="field-vis">-</span>token <span class="field-type">str unique</span></div>
+          <div class="field"><span class="field-vis">+</span>expires_at <span class="field-type">datetime</span></div>
+        </div>
+        <div class="class-methods">
+          <div class="method">+ is_valid()</div>
+          <div class="method">+ revoke()</div>
+        </div>
+      </div>
+
+      <!-- Exam -->
+      <div class="class-box">
+        <div class="class-name" style="color:var(--amber);">📋 Exam</div>
+        <div class="class-fields">
+          <div class="field"><span class="field-vis">+</span>id <span class="field-type">int PK</span></div>
+          <div class="field"><span class="field-vis">+</span>title <span class="field-type">str</span></div>
+          <div class="field"><span class="field-vis">+</span>description <span class="field-type">text</span></div>
+          <div class="field"><span class="field-vis">+</span>start_time <span class="field-type">datetime</span></div>
+          <div class="field"><span class="field-vis">+</span>end_time <span class="field-type">datetime</span></div>
+          <div class="field"><span class="field-vis">+</span>duration_min <span class="field-type">int</span></div>
+          <div class="field"><span class="field-vis">+</span>creator_id <span class="field-type">int FK</span></div>
+          <div class="field"><span class="field-vis">+</span>is_active <span class="field-type">bool</span></div>
+        </div>
+        <div class="class-methods">
+          <div class="method">+ is_open()</div>
+          <div class="method">+ get_questions()</div>
+        </div>
+      </div>
+
+      <!-- Question -->
+      <div class="class-box">
+        <div class="class-name" style="color:var(--green);">❓ Question</div>
+        <div class="class-fields">
+          <div class="field"><span class="field-vis">+</span>id <span class="field-type">int PK</span></div>
+          <div class="field"><span class="field-vis">+</span>exam_id <span class="field-type">int FK</span></div>
+          <div class="field"><span class="field-vis">+</span>question_text <span class="field-type">text</span></div>
+          <div class="field"><span class="field-vis">+</span>question_type <span class="field-type">enum</span></div>
+          <div class="field"><span class="field-vis">+</span>points <span class="field-type">float</span></div>
+          <div class="field"><span class="field-vis">-</span>options <span class="field-type">json</span></div>
+          <div class="field"><span class="field-vis">-</span>correct_answer <span class="field-type">str</span></div>
+        </div>
+        <div class="class-methods">
+          <div class="method">+ check_answer(ans)</div>
+          <div class="method">+ get_options()</div>
+        </div>
+      </div>
+
+      <!-- ExamResult -->
+      <div class="class-box">
+        <div class="class-name" style="color:var(--red);">📊 ExamResult</div>
+        <div class="class-fields">
+          <div class="field"><span class="field-vis">+</span>id <span class="field-type">int PK</span></div>
+          <div class="field"><span class="field-vis">+</span>exam_id <span class="field-type">int FK</span></div>
+          <div class="field"><span class="field-vis">+</span>student_id <span class="field-type">int FK</span></div>
+          <div class="field"><span class="field-vis">+</span>score <span class="field-type">float</span></div>
+          <div class="field"><span class="field-vis">-</span>answers <span class="field-type">json</span></div>
+          <div class="field"><span class="field-vis">+</span>started_at <span class="field-type">datetime</span></div>
+          <div class="field"><span class="field-vis">+</span>submitted_at <span class="field-type">datetime</span></div>
+        </div>
+        <div class="class-methods">
+          <div class="method">+ auto_grade()</div>
+          <div class="method">+ get_percentage()</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Relations -->
+    <div class="relations">
+      <div class="relation"><span class="rel-type">1..*</span><span class="rel-arrow">←</span>User creates<span class="rel-arrow">→</span><span class="rel-type">0..*</span> Exam</div>
+      <div class="relation"><span class="rel-type">1</span><span class="rel-arrow">←</span>Exam has<span class="rel-arrow">→</span><span class="rel-type">0..*</span> Question</div>
+      <div class="relation"><span class="rel-type">1</span><span class="rel-arrow">←</span>User takes<span class="rel-arrow">→</span><span class="rel-type">0..*</span> ExamResult</div>
+      <div class="relation"><span class="rel-type">1</span><span class="rel-arrow">←</span>Exam produces<span class="rel-arrow">→</span><span class="rel-type">0..*</span> ExamResult</div>
+      <div class="relation"><span class="rel-type">1</span><span class="rel-arrow">←</span>User has<span class="rel-arrow">→</span><span class="rel-type">0..*</span> UserSession</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 3. SEQUENCE DIAGRAM ════════════════════════════════ -->
+<section class="section" id="sequence" style="padding-top:20px;">
+  <div class="section-header">
+    <div class="section-num">۳</div>
+    <div>
+      <div class="section-title">Sequence Diagram</div>
+      <div class="section-desc">نمودار توالی — جریان شرکت در آزمون</div>
+    </div>
+  </div>
+
+  <div class="diagram-box">
+    <div class="seq-box">
+      <table class="seq-table">
+        <thead>
+          <tr>
+            <td class="lifeline" style="color:var(--green);">👤 دانشجو</td>
+            <td class="lifeline" style="color:var(--accent);">🌐 Browser</td>
+            <td class="lifeline" style="color:var(--amber);">⚡ FastAPI</td>
+            <td class="lifeline" style="color:var(--violet);">🗄 Database</td>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>کلیک روی آزمون</td>
+            <td class="msg-cell"><span class="arrow-right">GET /exams/{id}/take →</span></td>
+            <td></td><td></td>
+          </tr>
+          <tr>
+            <td></td><td></td>
+            <td class="msg-cell"><span class="arrow-right">بررسی session →</span></td>
+            <td>query user_sessions</td>
+          </tr>
+          <tr>
+            <td></td><td></td>
+            <td></td>
+            <td class="msg-cell" style="color:var(--violet);"><span class="arrow-left">← user object</span></td>
+          </tr>
+          <tr>
+            <td></td><td></td>
+            <td class="msg-cell"><span class="arrow-right">بررسی آزمون فعال →</span></td>
+            <td>query exams + questions</td>
+          </tr>
+          <tr>
+            <td></td><td></td>
+            <td></td>
+            <td class="msg-cell" style="color:var(--violet);"><span class="arrow-left">← exam + questions</span></td>
+          </tr>
+          <tr>
+            <td></td>
+            <td class="msg-cell"><span class="arrow-left">← HTML صفحه آزمون</span></td>
+            <td></td><td></td>
+          </tr>
+          <tr style="background:rgba(0,212,255,.03);">
+            <td colspan="4" style="text-align:center;color:var(--dim);font-size:.7rem;padding:6px;">
+              ── loop: دانشجو به سوالات پاسخ می‌دهد (auto-save to localStorage) ──
+            </td>
+          </tr>
+          <tr>
+            <td>کلیک «ارسال»</td>
+            <td class="msg-cell"><span class="arrow-right">POST /exams/{id}/submit →</span></td>
+            <td></td><td></td>
+          </tr>
+          <tr>
+            <td></td><td></td>
+            <td class="msg-cell"><span class="arrow-right">تصحیح خودکار →</span></td>
+            <td>INSERT exam_results</td>
+          </tr>
+          <tr>
+            <td></td><td></td>
+            <td></td>
+            <td class="msg-cell" style="color:var(--violet);"><span class="arrow-left">← result_id</span></td>
+          </tr>
+          <tr>
+            <td></td>
+            <td class="msg-cell"><span class="arrow-left">← Redirect /results/{id}</span></td>
+            <td></td><td></td>
+          </tr>
+          <tr>
+            <td>مشاهده نتیجه</td>
+            <td class="msg-cell"><span class="arrow-right">GET /results/{id} →</span></td>
+            <td></td><td></td>
+          </tr>
+          <tr>
+            <td></td><td></td>
+            <td class="msg-cell"><span class="arrow-right">load result →</span></td>
+            <td>query exam_results + questions</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td class="msg-cell"><span class="arrow-left">← صفحه نتیجه + نمره</span></td>
+            <td></td><td></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div style="margin-top:20px;padding:14px;background:var(--raised);border:1px solid var(--border);border-radius:10px;font-size:.75rem;color:#9090b0;line-height:1.9;">
+      <strong style="color:var(--accent);">نکات کلیدی:</strong><br>
+      ✦ اگر session منقضی شده باشد → Redirect به /login<br>
+      ✦ اگر آزمون خارج از بازه زمانی باشد → صفحه exam_closed<br>
+      ✦ اگر دانشجو قبلاً شرکت کرده → Redirect مستقیم به نتیجه<br>
+      ✦ اگر وقت تمام شد → JS به‌صورت خودکار فرم را submit می‌کند
+    </div>
+  </div>
+</section>
+
+<!-- ══ 4. ACTIVITY DIAGRAM ════════════════════════════════ -->
+<section class="section" id="activity" style="padding-top:20px;padding-bottom:60px;">
+  <div class="section-header">
+    <div class="section-num">۴</div>
+    <div>
+      <div class="section-title">Activity Diagram</div>
+      <div class="section-desc">نمودار فعالیت — جریان کامل سیستم از ورود تا نتیجه</div>
+    </div>
+  </div>
+
+  <div class="diagram-box">
+    <div class="activity-wrap">
+      <!-- User Flow -->
+      <div class="activity-lane">
+        <div class="lane-title user">👤 کاربر / دانشجو</div>
+        <div class="flow-steps">
+          <div class="flow-step"><div class="flow-step-num">●</div>شروع</div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-step"><div class="flow-step-num">۱</div>ورود به صفحه اصلی</div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-step"><div class="flow-step-num">۲</div>ثبت‌نام یا ورود</div>
+          <div class="flow-arrow">↓</div>
+          <div class="decision-row">
+            <div class="no-branch">✗ اطلاعات نادرست</div>
+            <div class="decision-mid">؟</div>
+            <div class="yes-branch">✓ احراز هویت موفق</div>
+          </div>
+          <div class="flow-arrow">↓ (موفق)</div>
+          <div class="flow-step"><div class="flow-step-num">۳</div>ورود به داشبورد</div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-step"><div class="flow-step-num">۴</div>مشاهده آزمون‌های فعال</div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-step"><div class="flow-step-num">۵</div>انتخاب و شروع آزمون</div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-step"><div class="flow-step-num">۶</div>پاسخ به سوالات</div>
+          <div class="flow-arrow">↓</div>
+          <div class="decision-row">
+            <div class="no-branch">⏱ اتمام وقت</div>
+            <div class="decision-mid">؟</div>
+            <div class="yes-branch">✓ ارسال دستی</div>
+          </div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-step"><div class="flow-step-num">۷</div>مشاهده نتیجه فوری</div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-step"><div class="flow-step-num">۸</div>مشاهده کارنامه</div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-step"><div class="flow-step-num">■</div>پایان</div>
+        </div>
+      </div>
+
+      <!-- System Flow -->
+      <div class="activity-lane">
+        <div class="lane-title system">⚡ سیستم (FastAPI)</div>
+        <div class="flow-steps">
+          <div class="flow-step"><div class="flow-step-num">●</div>دریافت درخواست</div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-step"><div class="flow-step-num">۱</div>بررسی session token</div>
+          <div class="flow-arrow">↓</div>
+          <div class="decision-row">
+            <div class="no-branch">✗ منقضی / نامعتبر</div>
+            <div class="decision-mid">؟</div>
+            <div class="yes-branch">✓ معتبر</div>
+          </div>
+          <div class="flow-arrow">↓ (معتبر)</div>
+          <div class="flow-step"><div class="flow-step-num">۲</div>بارگذاری اطلاعات کاربر</div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-step"><div class="flow-step-num">۳</div>بررسی بازه زمانی آزمون</div>
+          <div class="flow-arrow">↓</div>
+          <div class="decision-row">
+            <div class="no-branch">✗ خارج از بازه</div>
+            <div class="decision-mid">؟</div>
+            <div class="yes-branch">✓ فعال</div>
+          </div>
+          <div class="flow-arrow">↓ (فعال)</div>
+          <div class="flow-step"><div class="flow-step-num">۴</div>بارگذاری سوالات از DB</div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-step"><div class="flow-step-num">۵</div>دریافت و پردازش پاسخ‌ها</div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-step"><div class="flow-step-num">۶</div>تصحیح خودکار سوالات تستی</div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-step"><div class="flow-step-num">۷</div>ذخیره نتیجه در DB</div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-step"><div class="flow-step-num">۸</div>ارسال صفحه نتیجه به کاربر</div>
+          <div class="flow-arrow">↓</div>
+          <div class="flow-step"><div class="flow-step-num">■</div>پایان پردازش</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  مستند دیاگرام‌های UML — سامانه آزمون آنلاین |
+  <span>درس مهندسی نرم‌افزار ۱۴۰۵</span>
+</footer>
+
+</body>
+</html>

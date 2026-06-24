@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}ویرایش پروفایل{% endblock %}
+
+{% block content %}
+<div class="topbar fade-in">
+  <div>
+    <div class="page-title">ویرایش پروفایل 👤</div>
+    <div class="page-subtitle">{{ user.username }}</div>
+  </div>
+  <a href="/dashboard" class="btn btn-secondary">← داشبورد</a>
+</div>
+
+<div style="max-width:560px; margin:0 auto;">
+
+  {% if success %}
+  <div class="alert alert-success fade-in" style="margin-bottom:20px;">✅ {{ success }}</div>
+  {% endif %}
+  {% if error %}
+  <div class="alert alert-error fade-in" style="margin-bottom:20px;">⚠️ {{ error }}</div>
+  {% endif %}
+
+  <!-- Avatar Card -->
+  <div class="card fade-in fade-in-1" style="margin-bottom:20px; text-align:center; padding:32px;">
+    <div style="width:80px; height:80px; background:var(--accent-dim); border:2px solid var(--accent);
+                border-radius:50%; display:flex; align-items:center; justify-content:center;
+                font-size:2rem; font-weight:700; color:var(--accent); margin:0 auto 16px;">
+      {{ user.full_name[0] }}
+    </div>
+    <div style="font-weight:700; font-size:1.1rem;">{{ user.full_name }}</div>
+    <div style="color:var(--text-muted); font-size:.83rem; margin-top:4px;">{{ user.username }}</div>
+    <div style="margin-top:8px;">
+      <span class="badge {% if user.role=='admin' %}badge-violet{% elif user.role=='teacher' %}badge-cyan{% else %}badge-green{% endif %}">
+        {% if user.role=='admin' %}مدیر سیستم{% elif user.role=='teacher' %}استاد{% else %}دانشجو{% endif %}
+      </span>
+    </div>
+  </div>
+
+  <!-- Profile Form -->
+  <div class="card fade-in fade-in-2">
+    <div class="card-header">
+      <div class="card-title">اطلاعات شخصی</div>
+    </div>
+    <form method="post" action="/profile">
+      <div class="form-group">
+        <label class="form-label">نام کاربری</label>
+        <input type="text" class="form-control" value="{{ user.username }}" disabled
+               style="opacity:.5; cursor:not-allowed;">
+        <div style="font-size:.75rem; color:var(--text-muted); margin-top:4px;">نام کاربری قابل تغییر نیست</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">نام و نام خانوادگی *</label>
+        <input type="text" name="full_name" class="form-control" value="{{ user.full_name }}" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">ایمیل *</label>
+        <input type="email" name="email" class="form-control" value="{{ user.email }}" required>
+      </div>
+
+      <div style="border-top:1px solid var(--border); margin:20px 0; padding-top:20px;">
+        <div style="font-size:.85rem; font-weight:600; color:var(--text-secondary); margin-bottom:14px;">
+          🔐 تغییر رمز عبور (اختیاری)
+        </div>
+        <div class="form-group">
+          <label class="form-label">رمز عبور فعلی</label>
+          <input type="password" name="current_password" class="form-control" placeholder="در صورت تغییر رمز وارد کنید" autocomplete="current-password">
+        </div>
+        <div class="form-group">
+          <label class="form-label">رمز عبور جدید</label>
+          <input type="password" name="new_password" class="form-control" placeholder="رمز عبور جدید" autocomplete="new-password">
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-full">💾 ذخیره تغییرات</button>
+    </form>
+  </div>
+
+  <!-- Account Info -->
+  <div class="card fade-in fade-in-3" style="margin-top:20px;">
+    <div class="card-header"><div class="card-title">اطلاعات حساب</div></div>
+    <div style="font-size:.85rem; line-height:2;">
+      <div style="display:flex; justify-content:space-between; color:var(--text-secondary);">
+        <span>تاریخ عضویت:</span>
+        <span style="color:var(--text-primary);">{{ user.created_at.strftime('%Y/%m/%d') if user.created_at else '—' }}</span>
+      </div>
+      <div style="display:flex; justify-content:space-between; color:var(--text-secondary);">
+        <span>نقش:</span>
+        <span style="color:var(--accent);">{{ user.role }}</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}ویرایش کاربر — {{ target_user.full_name }}{% endblock %}
+
+{% block content %}
+<div class="topbar fade-in">
+  <div>
+    <div class="page-title">✏️ ویرایش کاربر</div>
+    <div class="page-subtitle">{{ target_user.full_name }} ({{ target_user.username }})</div>
+  </div>
+  <a href="/dashboard" class="btn btn-secondary">← برگشت به داشبورد</a>
+</div>
+
+<div style="max-width:640px; margin:0 auto;">
+
+  {% if success %}
+  <div class="alert alert-success fade-in" style="margin-bottom:20px;">✅ {{ success }}</div>
+  {% endif %}
+  {% if error %}
+  <div class="alert alert-error fade-in" style="margin-bottom:20px;">⚠️ {{ error }}</div>
+  {% endif %}
+
+  {% if target_user.role == 'teacher' and not target_user.is_verified %}
+  <div class="alert alert-warning fade-in" style="margin-bottom:20px;">
+    ⏳ این حساب استادی هنوز تایید نشده و امکان ورود ندارد. با ذخیره این فرم (تیک «تایید شده»)، حساب فعال می‌شود.
+  </div>
+  {% endif %}
+
+  <div class="card fade-in fade-in-1">
+    <div class="card-header">
+      <div class="card-title">اطلاعات کاربر</div>
+    </div>
+    <form method="post" action="/admin/users/{{ target_user.id }}/edit">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">نام کاربری *</label>
+          <input type="text" name="username" class="form-control" value="{{ target_user.username }}" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">نام و نام خانوادگی *</label>
+          <input type="text" name="full_name" class="form-control" value="{{ target_user.full_name }}" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">ایمیل *</label>
+        <input type="email" name="email" class="form-control" value="{{ target_user.email }}" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">نقش *</label>
+        <select name="role" class="form-control" required>
+          <option value="student" {% if target_user.role=='student' %}selected{% endif %}>دانشجو</option>
+          <option value="teacher" {% if target_user.role=='teacher' %}selected{% endif %}>استاد</option>
+          <option value="admin"   {% if target_user.role=='admin'   %}selected{% endif %}>مدیر</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:.88rem; color:var(--text-secondary);">
+          <input type="checkbox" name="is_verified" value="1" {% if target_user.is_verified %}checked{% endif %} style="width:16px; height:16px;">
+          حساب تایید شده (امکان ورود دارد)
+        </label>
+        <div class="form-hint">برای استادان جدید، تا این گزینه توسط ادمین تیک نخورد، امکان ورود به سیستم وجود ندارد.</div>
+      </div>
+
+      <div style="border-top:1px solid var(--border); margin:20px 0; padding-top:20px;">
+        <div style="font-size:.85rem; font-weight:600; color:var(--text-secondary); margin-bottom:14px;">
+          🔐 بازنشانی رمز عبور (اختیاری)
+        </div>
+        <div class="form-group">
+          <label class="form-label">رمز عبور جدید</label>
+          <input type="password" name="new_password" class="form-control"
+                 placeholder="در صورت نیاز به تغییر رمز، وارد کنید" autocomplete="new-password">
+          <div style="font-size:.75rem; color:var(--text-muted); margin-top:4px;">
+            ادمین می‌تواند بدون دانستن رمز فعلی، رمز هر کاربر را بازنشانی کند.
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:12px;">
+        <button type="submit" class="btn btn-primary" style="flex:1;">💾 ذخیره تغییرات</button>
+        <a href="/dashboard" class="btn btn-secondary">لغو</a>
+      </div>
+    </form>
+  </div>
+
+  <div class="card fade-in fade-in-2" style="margin-top:20px;">
+    <div class="card-header"><div class="card-title">اطلاعات حساب</div></div>
+    <div style="font-size:.85rem; line-height:2;">
+      <div style="display:flex; justify-content:space-between; color:var(--text-secondary);">
+        <span>تاریخ عضویت:</span>
+        <span style="color:var(--text-primary);">{{ target_user.created_at.strftime('%Y/%m/%d') if target_user.created_at else '—' }}</span>
+      </div>
+      <div style="display:flex; justify-content:space-between; color:var(--text-secondary);">
+        <span>شناسه کاربر:</span>
+        <span style="color:var(--text-primary);">#{{ target_user.id }}</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
